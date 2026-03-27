@@ -1,0 +1,31 @@
+# Maven / Gradle build outputs
+target/
+build/
+*.class
+*.jar
+*.war
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Spring Boot
+*.log
+application-local.properties
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+*.env
