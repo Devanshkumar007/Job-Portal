@@ -1,0 +1,63 @@
+.dashboard-container {
+
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    color: white;
+
+    h1 { font-size: 2rem; font-weight: 700; margin: 0 0 6px; }
+    p { opacity: 0.82; margin: 0; }
+    button { height: 48px; border-radius: 12px; }
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+      min-width: 180px;
+      border-radius: 20px !important;
+
+      mat-icon {
+        font-size: 40px;
+        width: 40px;
+        height: 40px;
+        color: #0d4ea6;
+      }
+
+      div {
+        display: flex;
+        flex-direction: column;
+        .stat-number { font-size: 2rem; font-weight: 700; color: #10243e; }
+        .stat-label { font-size: 0.85rem; color: #667085; }
+      }
+    }
+  }
+
+  .table-card {
+    border-radius: 24px !important;
+
+    .loading, .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #667085;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+        display: block;
+      }
+    }
+
+    .jobs-table { width: 100%; }
+  }
+}

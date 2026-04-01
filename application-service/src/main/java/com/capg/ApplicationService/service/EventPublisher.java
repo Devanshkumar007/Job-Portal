@@ -27,7 +27,7 @@ public class EventPublisher {
 
         rabbitTemplate.convertAndSend(
                 "job-portal-exchange",
-                "notification.application.status.changed",
+                "notification.application.status",
                 event
         );
     }

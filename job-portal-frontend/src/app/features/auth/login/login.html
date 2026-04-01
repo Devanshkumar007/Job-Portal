@@ -1,0 +1,56 @@
+<div class="auth-layout">
+  <section class="auth-copy">
+    <span class="eyebrow">Nexus Careers</span>
+    <h1>Login to continue your job search journey.</h1>
+    <p>Track applications, explore curated openings, and jump back into your hiring flow in one place.</p>
+
+    <div class="auth-stats">
+      <div class="stat-card">
+        <strong>Smart Search</strong>
+        <span>Filter by title, location, salary, and experience.</span>
+      </div>
+      <div class="stat-card">
+        <strong>Quick Apply</strong>
+        <span>Move from discovery to application in a few clicks.</span>
+      </div>
+    </div>
+  </section>
+
+  <mat-card class="login-card section-card">
+    <mat-card-header>
+      <mat-card-title>Login</mat-card-title>
+      <mat-card-subtitle>Welcome back to your account</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email address</mat-label>
+          <input matInput formControlName="email" type="email" placeholder="you@example.com">
+          <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Enter a valid email</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'">
+          <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">Minimum 6 characters</mat-error>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Signing in...' : 'Login' }}
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <p class="register-link">
+        New here? <a routerLink="/register">Create an account</a>
+      </p>
+    </mat-card-actions>
+  </mat-card>
+</div>

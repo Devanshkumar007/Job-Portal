@@ -11,6 +11,9 @@ public class RabbitMQConfig {
 
     public static final String EXCHANGE = "job-portal-exchange";
     public static final String USER_DELETED_QUEUE = "job.user.deleted.queue";
+    public static final String USER_DELETED_ROUTING_KEY = "job.user.deleted";
+    public static final String JOB_CREATED_ROUTING_KEY = "notification.job.created";
+    public static final String JOB_DELETED_ROUTING_KEY = "application.job.deleted";
 
     @Bean
     public TopicExchange exchange() {
@@ -27,7 +30,7 @@ public class RabbitMQConfig {
         return BindingBuilder
                 .bind(userDeletedQueue)
                 .to(exchange)
-                .with("user.deleted");
+                .with(USER_DELETED_ROUTING_KEY);
     }
 
     @Bean

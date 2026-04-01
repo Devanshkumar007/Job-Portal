@@ -1,0 +1,169 @@
+<!-- Hero Section -->
+<div class="hero-section">
+  <div class="hero-content">
+    <span class="hero-eyebrow">Career discovery platform</span>
+    <h1>Find Your Dream Job Today</h1>
+    <p>Browse curated openings, filter with precision, and move from search to application with less friction.</p>
+
+    <div class="search-bar">
+      <mat-form-field appearance="outline" class="search-input">
+        <mat-label>Search job title</mat-label>
+        <input matInput [(ngModel)]="searchKeyword" (keyup.enter)="searchJobs()"
+               placeholder="e.g. Java Developer, Data Analyst">
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+      <button mat-raised-button color="primary" class="search-btn" (click)="searchJobs()">
+        Search
+      </button>
+    </div>
+
+    <div class="hero-metrics">
+      <div class="metric">
+        <strong>{{ totalJobs }}</strong>
+        <span>Live job listings</span>
+      </div>
+      <div class="metric">
+        <strong>6 Filters</strong>
+        <span>For targeted search</span>
+      </div>
+      <div class="metric">
+        <strong>Fast Apply</strong>
+        <span>On every detail page</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Jobs Section -->
+<div class="jobs-section">
+  <div class="section-header">
+    <div>
+      <h2>{{ hasActiveFilters ? 'Filtered Jobs' : 'Latest Jobs' }}</h2>
+      <span class="job-count">{{ totalJobs }} jobs found</span>
+    </div>
+  </div>
+
+  <mat-card class="filters-card section-card">
+    <div class="filters-top">
+      <div>
+        <h3>Filter Jobs</h3>
+        <p>Narrow jobs by location, company, salary, and experience.</p>
+      </div>
+      <button *ngIf="hasActiveFilters" mat-stroked-button (click)="clearFilters()">Clear All</button>
+    </div>
+
+    <div class="filters-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Location</mat-label>
+        <input matInput [(ngModel)]="filters.location" (keyup.enter)="applyFilters()" placeholder="e.g. Pune">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Company</mat-label>
+        <input matInput [(ngModel)]="filters.companyName" (keyup.enter)="applyFilters()" placeholder="e.g. Infosys">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Minimum salary</mat-label>
+        <input matInput type="number" [(ngModel)]="filters.minSalary" placeholder="e.g. 500000">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Maximum salary</mat-label>
+        <input matInput type="number" [(ngModel)]="filters.maxSalary" placeholder="e.g. 1800000">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Minimum experience</mat-label>
+        <input matInput type="number" [(ngModel)]="filters.minExperience" placeholder="e.g. 2">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Maximum experience</mat-label>
+        <input matInput type="number" [(ngModel)]="filters.maxExperience" placeholder="e.g. 6">
+      </mat-form-field>
+    </div>
+
+    <div class="filters-actions">
+      <button mat-stroked-button (click)="clearFilters()">Reset</button>
+      <button mat-raised-button color="primary" (click)="applyFilters()">Apply Filters</button>
+    </div>
+  </mat-card>
+
+  <div *ngIf="hasActiveFilters" class="active-banner">
+    <mat-icon>tune</mat-icon>
+    <span>Showing results using your selected filters.</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-state">
+    <mat-icon class="spin">refresh</mat-icon>
+    <p>Loading jobs...</p>
+  </div>
+
+  <!-- No jobs -->
+  <div *ngIf="!isLoading && jobs.length === 0" class="empty-state">
+    <mat-icon>work_off</mat-icon>
+    <p>{{ hasActiveFilters ? 'No jobs matched your filters.' : 'No jobs available right now. Check back later!' }}</p>
+  </div>
+
+  
+  <!-- Job Cards Grid -->
+  <div *ngIf="!isLoading && jobs.length > 0" class="jobs-grid">
+    <mat-card *ngFor="let job of jobs" class="job-card" (click)="viewJob(job.id)">
+      <button
+        *ngIf="canDeleteJob(job)"
+        mat-icon-button
+        class="delete-btn"
+        color="warn"
+        (click)="deleteJob($event, job.id)"
+        matTooltip="Delete this job">
+        <mat-icon>delete</mat-icon>
+      </button>
+
+      <div class="card-top">
+        <div class="company-avatar">
+          {{ job.companyName.charAt(0) }}
+        </div>
+        <div class="title-block">
+          <h3>{{ job.title }}</h3>
+          <p>{{ job.companyName }}</p>
+        </div>
+      </div>
+
+      <mat-card-content>
+        <div class="job-meta">
+          <span class="meta-item">
+            <mat-icon>location_on</mat-icon>
+            {{ job.location }}
+          </span>
+          <span class="meta-item">
+            <mat-icon>payments</mat-icon>
+            {{ formatSalary(job.salary) }}
+          </span>
+          <span class="meta-item">
+            <mat-icon>work_history</mat-icon>
+            {{ job.experience }} yrs exp
+          </span>
+        </div>
+        <p class="job-description">{{ job.description | slice:0:120 }}...</p>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-stroked-button color="primary" class="details-btn" (click)="viewJob(job.id); $event.stopPropagation()">
+          View Details
+        </button>
+        <span class="posted-date">{{ job.createdAt | date:'mediumDate' }}</span>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Pagination -->
+  <mat-paginator
+    *ngIf="totalJobs > pageSize"
+    [length]="totalJobs"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[9, 18, 27]"
+    (page)="onPageChange($event)">
+  </mat-paginator>
+</div>

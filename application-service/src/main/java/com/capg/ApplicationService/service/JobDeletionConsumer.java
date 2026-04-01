@@ -18,7 +18,6 @@ public class JobDeletionConsumer {
     private final CloudinaryService cloudinaryService;
     private final ApplicationRepository applicationRepository;
 
-
     @RabbitListener(queues = "application.job.deleted.queue")
     @Transactional
     public void handleJobDeleted(JobDeletedEvent event) {
@@ -32,5 +31,6 @@ public class JobDeletionConsumer {
         });
 
         repository.deleteByJobId(event.getJobId());
+        System.out.println("Deleted applications for job: " + event.getJobId());
     }
 }

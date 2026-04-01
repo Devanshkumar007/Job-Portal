@@ -1,6 +1,7 @@
 package com.capg.ApplicationService.service;
 
 import com.capg.ApplicationService.dto.ApplicationResponse;
+import com.capg.ApplicationService.dto.JobDeletedEvent;
 import com.capg.ApplicationService.entity.Application;
 import com.capg.ApplicationService.exception.ResourceNotFoundException;
 import com.capg.ApplicationService.exception.UnauthorizedException;

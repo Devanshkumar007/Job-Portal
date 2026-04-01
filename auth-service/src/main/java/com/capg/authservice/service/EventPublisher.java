@@ -15,7 +15,7 @@ public class EventPublisher {
 
         rabbitTemplate.convertAndSend(
                 "job-portal-exchange",
-                "user.deleted",
+                "job.user.deleted",
                 event
         );
     }

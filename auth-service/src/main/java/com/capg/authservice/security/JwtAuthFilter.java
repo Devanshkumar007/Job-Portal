@@ -30,8 +30,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // Step 1: Get Authorization header
-        // Format: "Bearer eyJhbGci..."
         String authHeader = request.getHeader("Authorization");
 
         String token = null;

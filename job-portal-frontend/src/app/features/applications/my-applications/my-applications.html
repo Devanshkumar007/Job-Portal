@@ -1,0 +1,54 @@
+<div class="page-header">
+  <h1>My Applications</h1>
+  <p>Track the status of all your job applications</p>
+</div>
+
+<div *ngIf="isLoading" class="loading-state">
+  <mat-icon class="spin">refresh</mat-icon>
+  <p>Loading your applications...</p>
+</div>
+
+<div *ngIf="!isLoading && applications.length === 0" class="empty-state section-card">
+  <mat-icon>work_off</mat-icon>
+  <h3>No applications yet</h3>
+  <p>Start applying for jobs to track them here.</p>
+  <button mat-raised-button color="primary" routerLink="/jobs">Browse Jobs</button>
+</div>
+
+<div class="applications-grid" *ngIf="!isLoading && applications.length > 0">
+  <mat-card class="application-card section-card" *ngFor="let app of applications">
+    <mat-card-header>
+      <div class="company-avatar" mat-card-avatar>{{ app.company.charAt(0) }}</div>
+      <mat-card-title>{{ app.jobTitle }}</mat-card-title>
+      <mat-card-subtitle>{{ app.company }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="status-row">
+        <mat-chip [color]="getStatusColor(app.status)" selected>
+          <mat-icon matChipTrailingIcon>{{ getStatusIcon(app.status) }}</mat-icon>
+          {{ app.status | titlecase }}
+        </mat-chip>
+        <span class="applied-date">Applied {{ app.appliedAt | date:'mediumDate' }}</span>
+      </div>
+
+      <!-- Progress tracker -->
+      <div class="progress-track">
+        <div class="track-step" [class.active]="['APPLIED','UNDER_REVIEW','SHORTLISTED'].includes(app.status)" [class.rejected]="app.status === 'REJECTED'">
+          <div class="step-dot"></div>
+          <span>Applied</span>
+        </div>
+        <div class="track-line" [class.active]="['UNDER_REVIEW','SHORTLISTED'].includes(app.status)"></div>
+        <div class="track-step" [class.active]="['UNDER_REVIEW','SHORTLISTED'].includes(app.status)">
+          <div class="step-dot"></div>
+          <span>Under Review</span>
+        </div>
+        <div class="track-line" [class.active]="app.status === 'SHORTLISTED'"></div>
+        <div class="track-step" [class.active]="app.status === 'SHORTLISTED'">
+          <div class="step-dot"></div>
+          <span>Shortlisted</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

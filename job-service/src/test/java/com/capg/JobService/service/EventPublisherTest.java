@@ -1,5 +1,6 @@
 package com.capg.JobService.service;
 
+import com.capg.JobService.config.RabbitMQConfig;
 import com.capg.JobService.dto.JobCreatedDto;
 import com.capg.JobService.dto.JobDeletedEvent;
 import org.junit.jupiter.api.DisplayName;
@@ -33,8 +34,8 @@ class EventPublisherTest {
         eventPublisher.publishJobCreatedEvent(event);
 
         verify(rabbitTemplate).convertAndSend(
-                eq("job-portal-exchange"),
-                eq("notification.job.created"),
+                eq(RabbitMQConfig.EXCHANGE),
+                eq(RabbitMQConfig.JOB_CREATED_ROUTING_KEY),
                 eq(event)
         );
     }
@@ -47,8 +48,8 @@ class EventPublisherTest {
         eventPublisher.publishJobDeletedEvent(event);
 
         verify(rabbitTemplate).convertAndSend(
-                eq("job-portal-exchange"),
-                eq("job.deleted"),
+                eq(RabbitMQConfig.EXCHANGE),
+                eq(RabbitMQConfig.JOB_DELETED_ROUTING_KEY),
                 eq(new JobDeletedEvent(901L))
         );
     }
@@ -59,7 +60,7 @@ class EventPublisherTest {
         JobDeletedEvent event = new JobDeletedEvent(902L);
         RuntimeException failure = new RuntimeException("Broker unavailable");
         doThrow(failure).when(rabbitTemplate)
-                .convertAndSend(eq("job-portal-exchange"), eq("job.deleted"), eq(new JobDeletedEvent(902L)));
+                .convertAndSend(eq(RabbitMQConfig.EXCHANGE), eq(RabbitMQConfig.JOB_DELETED_ROUTING_KEY), eq(new JobDeletedEvent(902L)));
 
         RuntimeException ex = assertThrows(
                 RuntimeException.class,
@@ -68,8 +69,8 @@ class EventPublisherTest {
 
         assertEquals("Broker unavailable", ex.getMessage());
         verify(rabbitTemplate).convertAndSend(
-                eq("job-portal-exchange"),
-                eq("job.deleted"),
+                eq(RabbitMQConfig.EXCHANGE),
+                eq(RabbitMQConfig.JOB_DELETED_ROUTING_KEY),
                 eq(new JobDeletedEvent(902L))
         );
     }

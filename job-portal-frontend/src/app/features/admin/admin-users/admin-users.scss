@@ -1,0 +1,31 @@
+.page-header {
+  margin-bottom: 28px;
+  color: white;
+  h1 { font-size: 2rem; font-weight: 700; margin: 0 0 8px; }
+  p { opacity: 0.82; margin: 0; }
+}
+
+.table-card {
+  border-radius: 24px !important;
+  padding: 8px;
+
+  .loading {
+    text-align: center; padding: 48px; color: #999;
+    mat-icon { font-size: 40px; width: 40px; height: 40px; margin-bottom: 12px; }
+    .spin { animation: spin 1s linear infinite; }
+  }
+
+  .full-table { width: 100%; }
+
+  .user-cell {
+    display: flex; align-items: center; gap: 12px;
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #0d4ea6; color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+    }
+  }
+}
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

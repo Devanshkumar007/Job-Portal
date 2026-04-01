@@ -2,10 +2,11 @@ package com.capg.JobService.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-public class JobResponseDto {
+public class JobResponseDto implements Serializable {
         private Long id;
         private String title;
         private String companyName;

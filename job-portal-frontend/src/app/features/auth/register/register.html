@@ -1,0 +1,66 @@
+<div class="register-layout">
+  <section class="register-copy">
+    <span class="eyebrow">Build your profile</span>
+    <h1>Create an account tailored to how you hire or apply.</h1>
+    <p>Start as a job seeker or recruiter, then manage your career flow from one polished workspace.</p>
+  </section>
+
+  <mat-card class="register-card section-card">
+    <mat-card-header>
+      <mat-card-title>Register</mat-card-title>
+      <mat-card-subtitle>Join Nexus Careers today</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Full name</mat-label>
+          <input matInput formControlName="name" placeholder="John Doe">
+          <mat-error *ngIf="registerForm.get('name')?.hasError('required')">Name is required</mat-error>
+          <mat-error *ngIf="registerForm.get('name')?.hasError('minlength')">Minimum 2 characters</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email address</mat-label>
+          <input matInput formControlName="email" type="email" placeholder="you@example.com">
+          <mat-error *ngIf="registerForm.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="registerForm.get('email')?.hasError('email')">Enter a valid email</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'">
+          <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="registerForm.get('password')?.hasError('required')">Password is required</mat-error>
+          <mat-error *ngIf="registerForm.get('password')?.hasError('minlength')">Minimum 6 characters</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Phone number</mat-label>
+          <input matInput formControlName="phone" placeholder="+91 9999999999">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Register as</mat-label>
+          <mat-select formControlName="role">
+            <mat-option value="JOB_SEEKER">Job Seeker</mat-option>
+            <mat-option value="RECRUITER">Recruiter</mat-option>
+          </mat-select>
+          <mat-error *ngIf="registerForm.get('role')?.hasError('required')">Please select a role</mat-error>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Creating account...' : 'Register' }}
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <p class="login-link">
+        Already have an account? <a routerLink="/login">Login here</a>
+      </p>
+    </mat-card-actions>
+  </mat-card>
+</div>

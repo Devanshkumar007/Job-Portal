@@ -1,0 +1,123 @@
+.auth-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 36px;
+  min-height: calc(100vh - 180px);
+
+  .auth-copy {
+    flex: 1;
+    max-width: 520px;
+    color: white;
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      margin-bottom: 18px;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 4vw, 3.4rem);
+      line-height: 1.04;
+      margin: 0 0 14px;
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.82);
+      line-height: 1.7;
+      margin: 0 0 24px;
+      font-size: 1.02rem;
+    }
+
+    .auth-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .stat-card {
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(10px);
+
+      strong,
+      span {
+        display: block;
+      }
+
+      strong {
+        margin-bottom: 6px;
+      }
+
+      span {
+        color: rgba(255, 255, 255, 0.78);
+        line-height: 1.5;
+      }
+    }
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 430px;
+    padding: 28px 22px;
+
+    mat-card-header {
+      margin-bottom: 18px;
+
+      mat-card-title {
+        font-size: 2rem;
+        font-weight: 700;
+      }
+    }
+
+    .full-width {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .submit-btn {
+      height: 50px;
+      font-size: 1rem;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 14px;
+    }
+
+    .register-link {
+      text-align: center;
+      width: 100%;
+      margin-top: 16px;
+
+      a {
+        color: #0d4ea6;
+        text-decoration: none;
+        font-weight: 700;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .auth-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-layout .auth-copy .auth-stats {
+    grid-template-columns: 1fr;
+  }
+}

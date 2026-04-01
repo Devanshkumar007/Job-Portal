@@ -18,16 +18,13 @@ public class RabbitMQConfig {
     public static final String JOB_DELETED_QUEUE = "application.job.deleted.queue";
 
     @Bean
-    public Queue jobDeletedQueue() {
-        return new Queue(JOB_DELETED_QUEUE);
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
     }
 
     @Bean
-    public Binding jobDeletedBinding(Queue jobDeletedQueue, TopicExchange exchange) {
-        return BindingBuilder
-                .bind(jobDeletedQueue)
-                .to(exchange)
-                .with("job.deleted");
+    public Queue jobDeletedQueue() {
+        return new Queue(JOB_DELETED_QUEUE);
     }
 
     @Bean
@@ -41,15 +38,26 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public Queue JobDeletedQueue() {
+        return new Queue(JOB_DELETED_QUEUE);
+    }
+
+
+    @Bean
+    public Binding jobDeletedBinding(Queue jobDeletedQueue, TopicExchange exchange) {
+        return BindingBuilder
+                .bind(jobDeletedQueue)
+                .to(exchange)
+                .with("application.job.deleted");
+    }
+
+    @Bean
     public Binding userDeletedBinding(Queue userDeletedQueue, TopicExchange exchange) {
         return BindingBuilder
                 .bind(userDeletedQueue)
                 .to(exchange)
-                .with("user.deleted");
+                .with("application.user.deleted");
     }
 
-    @Bean
-    public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
+
 }

@@ -72,22 +72,18 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         String normalizedEmail = normalizeEmail(request.getEmail());
 
-        // Step 1: Check if user exists
         User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
                 .orElseThrow(() -> new UserNotFoundException(
                         "User not found with email: " + normalizedEmail));
 
-        // Step 2: Check if password matches
         if (!passwordEncoder.matches(
                 request.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException(
                     "Invalid email or password!");
         }
 
-        // Step 3: Generate JWT token
         String token = jwtUtil.generateToken(user);
-
-        // Step 4: Return response
+        
         return buildAuthResponse(user, token, "Login successful!");
     }
 

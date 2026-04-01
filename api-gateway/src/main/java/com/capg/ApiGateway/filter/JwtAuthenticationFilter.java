@@ -60,8 +60,10 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<Object
     private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
         byte[] bytes = ("{\"message\":\"" + message + "\"}").getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+
         return exchange.getResponse().writeWith(Mono.just(buffer));
     }
 }

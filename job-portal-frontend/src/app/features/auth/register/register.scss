@@ -1,0 +1,84 @@
+.register-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 36px;
+  min-height: calc(100vh - 180px);
+
+  .register-copy {
+    flex: 1;
+    max-width: 520px;
+    color: white;
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      margin-bottom: 18px;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: clamp(2.1rem, 4vw, 3.2rem);
+      line-height: 1.08;
+      margin: 0 0 14px;
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.82);
+      line-height: 1.7;
+      margin: 0;
+    }
+  }
+
+  .register-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 28px 22px;
+
+    mat-card-header {
+      margin-bottom: 18px;
+
+      mat-card-title {
+        font-size: 2rem;
+        font-weight: 700;
+      }
+    }
+
+    .full-width {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .submit-btn {
+      height: 50px;
+      font-size: 1rem;
+      margin-top: 10px;
+      border-radius: 14px;
+    }
+
+    .login-link {
+      text-align: center;
+      width: 100%;
+      margin-top: 16px;
+
+      a {
+        color: #0d4ea6;
+        text-decoration: none;
+        font-weight: 700;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .register-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

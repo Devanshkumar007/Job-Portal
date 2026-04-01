@@ -3,10 +3,11 @@ package com.capg.ApplicationService.dto;
 import com.capg.ApplicationService.entity.ApplicationStatus;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-public class ApplicationResponse {
+public class ApplicationResponse implements Serializable {
     private Long id;
     private Long userId;
     private Long jobId;

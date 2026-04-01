@@ -1,0 +1,111 @@
+<div class="job-detail-container">
+
+  <div *ngIf="isLoading" class="loading">
+    <mat-icon class="spin">refresh</mat-icon>
+    <p>Loading job details...</p>
+  </div>
+
+  <div *ngIf="!isLoading && job">
+    <button mat-button (click)="goBack()" class="back-btn">
+      <mat-icon>arrow_back</mat-icon> Back to Jobs
+    </button>
+
+    <mat-card class="detail-card section-card">
+      <mat-card-header>
+        <div class="title-block">
+          <div class="company-avatar" mat-card-avatar>
+            {{ job.companyName.charAt(0) }}
+          </div>
+          <div>
+            <mat-card-title>{{ job.title }}</mat-card-title>
+            <mat-card-subtitle>{{ job.companyName }}</mat-card-subtitle>
+          </div>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="job-meta-grid">
+          <div class="meta-card">
+            <mat-icon>location_on</mat-icon>
+            <div>
+              <span class="meta-label">Location</span>
+              <span class="meta-value">{{ job.location }}</span>
+            </div>
+          </div>
+          <div class="meta-card">
+            <mat-icon>payments</mat-icon>
+            <div>
+              <span class="meta-label">Salary</span>
+              <span class="meta-value">{{ formatSalary(job.salary) }}</span>
+            </div>
+          </div>
+          <div class="meta-card">
+            <mat-icon>work_history</mat-icon>
+            <div>
+              <span class="meta-label">Experience</span>
+              <span class="meta-value">{{ job.experience }} years</span>
+            </div>
+          </div>
+          <div class="meta-card">
+            <mat-icon>calendar_today</mat-icon>
+            <div>
+              <span class="meta-label">Posted On</span>
+              <span class="meta-value">{{ job.createdAt | date:'mediumDate' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="description-section">
+          <h3>Job Description</h3>
+          <p>{{ job.description }}</p>
+        </div>
+
+        <!-- Apply Section for Job Seekers -->
+        <div *ngIf="authService.isJobSeeker() && !hasApplied" class="apply-section">
+          <mat-divider></mat-divider>
+          <h3>Apply for this Job</h3>
+
+          <div class="file-upload-area">
+            <mat-icon>upload_file</mat-icon>
+            <p>Upload your resume (PDF only, max 5MB)</p>
+            <label class="file-label">
+              <input type="file" accept=".pdf" (change)="onFileSelected($event)" hidden>
+              <span mat-raised-button class="upload-btn">
+                {{ selectedFile ? selectedFile.name : 'Choose Resume (PDF)' }}
+              </span>
+            </label>
+            <p *ngIf="selectedFile" class="file-selected">
+              <mat-icon>check_circle</mat-icon> {{ selectedFile.name }} selected
+            </p>
+          </div>
+
+          <button
+            mat-raised-button
+            color="primary"
+            class="submit-apply-btn"
+            [disabled]="isApplying || !selectedFile"
+            (click)="applyForJob()">
+            <mat-icon>send</mat-icon>
+            {{ isApplying ? 'Submitting...' : 'Submit Application' }}
+          </button>
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="authService.isJobSeeker() && hasApplied" class="applied-success">
+          <mat-icon>check_circle</mat-icon>
+          <h3>Application Submitted!</h3>
+          <p>You have successfully applied for this job. Track your application in My Applications.</p>
+        </div>
+
+        <!-- Recruiter message -->
+        <div *ngIf="authService.isRecruiter()" class="recruiter-note">
+          <mat-icon>info</mat-icon>
+          Recruiters cannot apply for jobs.
+        </div>
+
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,0 +1,74 @@
+<div class="post-job-container">
+  <mat-card class="post-job-card">
+    <mat-card-header>
+      <mat-card-title>Post a New Job</mat-card-title>
+      <mat-card-subtitle>Fill in the details to create a job listing</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="postJobForm" (ngSubmit)="onSubmit()">
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Job Title</mat-label>
+            <input matInput formControlName="title" placeholder="e.g. Senior Java Developer">
+            <mat-icon matPrefix>work</mat-icon>
+            <mat-error *ngIf="postJobForm.get('title')?.hasError('required')">Job title is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Company Name</mat-label>
+            <input matInput formControlName="companyName" placeholder="e.g. Google">
+            <mat-icon matPrefix>business</mat-icon>
+            <mat-error *ngIf="postJobForm.get('companyName')?.hasError('required')">Company name is required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Location</mat-label>
+            <input matInput formControlName="location" placeholder="e.g. Bangalore, Remote">
+            <mat-icon matPrefix>location_on</mat-icon>
+            <mat-error *ngIf="postJobForm.get('location')?.hasError('required')">Location is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Salary (in LPA)</mat-label>
+            <input matInput formControlName="salary" type="number" placeholder="e.g. 1200000">
+            <mat-icon matPrefix>payments</mat-icon>
+            <mat-hint>Enter amount in rupees e.g. 1200000 for 12 LPA</mat-hint>
+            <mat-error *ngIf="postJobForm.get('salary')?.hasError('required')">Salary is required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Experience Required (years)</mat-label>
+            <input matInput formControlName="experience" type="number" placeholder="e.g. 3">
+            <mat-icon matPrefix>work_history</mat-icon>
+            <mat-error *ngIf="postJobForm.get('experience')?.hasError('required')">Experience is required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Job Description</mat-label>
+          <textarea matInput formControlName="description" rows="6"
+            placeholder="Describe the role, responsibilities, requirements..."></textarea>
+          <mat-icon matPrefix>description</mat-icon>
+          <mat-error *ngIf="postJobForm.get('description')?.hasError('required')">Description is required</mat-error>
+          <mat-error *ngIf="postJobForm.get('description')?.hasError('minlength')">Minimum 50 characters</mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-stroked-button type="button" (click)="postJobForm.reset()">
+            Clear Form
+          </button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="isLoading">
+            {{ isLoading ? 'Posting...' : 'Publish Job' }}
+          </button>
+        </div>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

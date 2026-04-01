@@ -1,0 +1,85 @@
+<div class="dashboard-container">
+
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div>
+      <h1>Recruiter Dashboard</h1>
+      <p>Welcome, {{ authService.getCurrentUser()?.name }}!</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="postNewJob()">
+      <mat-icon>add</mat-icon> Post New Job
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <mat-card class="stat-card">
+      <mat-icon>work</mat-icon>
+      <div>
+        <span class="stat-number">{{ jobs.length }}</span>
+        <span class="stat-label">Jobs Posted</span>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Jobs Table -->
+  <mat-card class="table-card">
+    <mat-card-header>
+      <mat-card-title>My Job Listings</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="isLoading" class="loading">
+        <p>Loading your jobs...</p>
+      </div>
+
+      <div *ngIf="!isLoading && jobs.length === 0" class="empty-state">
+        <mat-icon>work_off</mat-icon>
+        <p>You haven't posted any jobs yet.</p>
+        <button mat-raised-button color="primary" (click)="postNewJob()">
+          Post Your First Job
+        </button>
+      </div>
+
+      <table mat-table [dataSource]="jobs" *ngIf="!isLoading && jobs.length > 0" class="jobs-table">
+
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Job Title</th>
+          <td mat-cell *matCellDef="let job">{{ job.title }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="company">
+          <th mat-header-cell *matHeaderCellDef>Company</th>
+          <td mat-cell *matCellDef="let job">{{ job.companyName }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef>Location</th>
+          <td mat-cell *matCellDef="let job">{{ job.location }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="salary">
+          <th mat-header-cell *matHeaderCellDef>Salary</th>
+          <td mat-cell *matCellDef="let job">{{ formatSalary(job.salary) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let job">
+            <button mat-icon-button color="primary" (click)="viewApplications(job.id)"
+              matTooltip="View Applications">
+              <mat-icon>people</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteJob(job.id)"
+              matTooltip="Delete Job">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>

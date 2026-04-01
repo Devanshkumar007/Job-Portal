@@ -30,42 +30,33 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
         http
-            // Disable CSRF — not needed for REST APIs
-            .csrf(csrf -> csrf.disable())
-
-            // Define access rules
-            .authorizeHttpRequests(auth -> auth
-                // PUBLIC — no token needed
-                .requestMatchers("/api/auth/register").permitAll()
-                .requestMatchers("/api/auth/login").permitAll()
-                    .requestMatchers("/v3/api-docs/**",
-                            "/swagger-ui/**",
-                            "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/user/me").authenticated()
-                .requestMatchers("/api/user/**").hasRole("ADMIN")
-                // PROTECTED — token required for everything else
-                .anyRequest().authenticated()
-            )
-
-            // STATELESS — no sessions, JWT handles everything
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((request, response, authException) ->
-                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
-                .accessDeniedHandler((request, response, accessDeniedException) ->
-                        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
-            )
-
-            // Add JWT filter before default Spring Security filter
-            .addFilterBefore(jwtAuthFilter,
-                    UsernamePasswordAuthenticationFilter.class);
+                .cors(cors -> cors.disable())
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/user/me").authenticated()
+                        .requestMatchers("/api/user/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden"))
+                )
+                .addFilterBefore(jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -75,11 +66,9 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider();
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
         return provider;
@@ -92,7 +81,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public ModelMapper modelMapper(){
+    public ModelMapper modelMapper() {
         return new ModelMapper();
     }
 }

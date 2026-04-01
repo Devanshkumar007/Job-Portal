@@ -21,8 +21,6 @@ public class UserDeletionConsumer {
     @Transactional
     public void handleUserDeleted(UserDeletedEvent event) {
 
-
-
         if ("JOB_SEEKER".equals(event.getRole())) {
             List<Application> applications = applicationRepository.findByUserId(event.getUserId());
             applications.forEach(app -> {

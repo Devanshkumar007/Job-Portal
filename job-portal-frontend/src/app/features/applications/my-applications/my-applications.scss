@@ -1,0 +1,88 @@
+.page-header {
+  margin-bottom: 28px;
+  color: white;
+  h1 { font-size: 2rem; font-weight: 700; margin: 0 0 8px; }
+  p { opacity: 0.82; margin: 0; }
+}
+
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 60px;
+  mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 16px; color: #0d4ea6; }
+  h3 { font-size: 1.3rem; margin: 0 0 8px; }
+  p { color: #666; margin: 0 0 20px; }
+}
+
+.empty-state { border-radius: 24px; }
+
+.loading-state {
+  color: white;
+  mat-icon { color: white; }
+  .spin { animation: spin 1s linear infinite; }
+}
+
+.applications-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.application-card {
+  border-radius: 22px !important;
+  padding: 8px;
+
+  .company-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #0d4ea6; color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: 700;
+  }
+
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 12px 0;
+
+    .applied-date { font-size: 0.8rem; color: #999; }
+  }
+
+  .progress-track {
+    display: flex;
+    align-items: center;
+    margin-top: 16px;
+    gap: 0;
+
+    .track-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+
+      .step-dot {
+        width: 14px; height: 14px;
+        border-radius: 50%;
+        background: #ddd;
+        border: 2px solid #ddd;
+        transition: all 0.3s;
+      }
+
+      span { font-size: 0.7rem; color: #999; white-space: nowrap; }
+
+      &.active .step-dot { background: #0d4ea6; border-color: #0d4ea6; }
+      &.active span { color: #0d4ea6; font-weight: 600; }
+      &.rejected .step-dot { background: #e53935; border-color: #e53935; }
+    }
+
+    .track-line {
+      flex: 1;
+      height: 2px;
+      background: #ddd;
+      margin-bottom: 20px;
+      transition: background 0.3s;
+      &.active { background: #0d4ea6; }
+    }
+  }
+}
+
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
