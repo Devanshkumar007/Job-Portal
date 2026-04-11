@@ -1,5 +1,5 @@
 global:
-  scrape_interval: 5s   # how often Prometheus pulls data
+  scrape_interval: 5s   
 
 scrape_configs:
 
