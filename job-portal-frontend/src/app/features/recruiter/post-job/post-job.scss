@@ -1,14 +1,100 @@
 .post-job-container {
-  max-width: 800px;
+  max-width: 1080px;
   margin: 0 auto;
+  display: grid;
+  gap: 22px;
+
+  .hero-card {
+    overflow: hidden;
+
+    mat-card-content {
+      padding: 28px !important;
+      background: linear-gradient(155deg, rgba(16, 80, 185, 0.95), rgba(15, 96, 216, 0.94));
+      color: white;
+      border-radius: 28px;
+    }
+  }
+
+  .hero-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr);
+    gap: 18px;
+    align-items: center;
+  }
+
+  .hero-label {
+    display: inline-block;
+    margin-bottom: 10px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  h1 {
+    margin: 0 0 10px;
+    font-size: clamp(2rem, 4vw, 2.55rem);
+    line-height: 1.05;
+  }
+
+  .hero-content p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.82);
+    line-height: 1.7;
+  }
+
+  .hero-note {
+    padding: 18px 20px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(10px);
+
+    span {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    strong {
+      font-size: 1rem;
+      line-height: 1.5;
+      color: white;
+    }
+  }
 
   .post-job-card {
-    border-radius: 24px !important;
-    padding: 16px;
+    border-radius: 28px !important;
+    padding: 12px;
 
-    mat-card-header {
-      margin-bottom: 24px;
-      mat-card-title { font-size: 1.8rem; font-weight: 700; }
+    .card-topbar {
+      margin-bottom: 14px;
+
+      .section-label {
+        display: inline-block;
+        margin-bottom: 4px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--slate-500);
+      }
+
+      h2 {
+        margin: 0 0 6px;
+        font-size: 1.45rem;
+        color: var(--slate-900);
+      }
+
+      p {
+        margin: 0;
+        color: var(--slate-500);
+      }
     }
 
     .form-row {
@@ -16,10 +102,71 @@
       grid-template-columns: 1fr 1fr;
       gap: 16px;
 
-      @media (max-width: 600px) { grid-template-columns: 1fr; }
+      @media (max-width: 700px) { grid-template-columns: 1fr; }
     }
 
     .full-width { width: 100%; margin-bottom: 16px; }
+
+    .salary-type-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.7fr) minmax(0, 0fr);
+      gap: 16px;
+      align-items: start;
+      transition: grid-template-columns 0.36s cubic-bezier(0.22, 1, 0.36, 1), gap 0.36s ease;
+
+      &.has-duration {
+        grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.7fr) minmax(240px, 0.8fr);
+      }
+    }
+
+    .type-field,
+    .duration-field {
+      min-width: 0;
+    }
+
+    .duration-field {
+      overflow: hidden;
+      opacity: 0;
+      max-width: 0;
+      transform: translateX(-14px) scaleX(0.94);
+      transform-origin: left center;
+      pointer-events: none;
+      transition:
+        max-width 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.24s ease,
+        transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+
+      mat-form-field {
+        min-height: 64px;
+      }
+
+      .mat-form-field-wrapper,
+      .mat-form-field-flex,
+      .mat-form-field-infix {
+        min-height: 64px;
+        align-items: center;
+      }
+
+      input.mat-input-element {
+        line-height: 1.4;
+        min-height: 1.4em;
+        height: 100%;
+        padding-top: 0.8rem;
+        padding-bottom: 0.75rem;
+      }
+
+      .mat-form-field-prefix,
+      .mat-form-field-suffix {
+        align-items: center;
+      }
+
+      &.is-visible {
+        max-width: 360px;
+        opacity: 1;
+        transform: translateX(0) scaleX(1);
+        pointer-events: auto;
+      }
+    }
 
     .form-actions {
       display: flex;
@@ -27,7 +174,43 @@
       gap: 16px;
       margin-top: 16px;
 
-      button { height: 48px; padding: 0 32px; font-size: 1rem; border-radius: 12px; }
+      button { min-height: 48px; padding: 0 32px; font-size: 0.98rem; border-radius: 14px; font-weight: 700; }
+    }
+  }
+}
+
+@media (max-width: 860px) {
+  .post-job-container {
+    .hero-content {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .post-job-container {
+    .salary-type-row,
+    .salary-type-row.has-duration {
+      grid-template-columns: 1fr;
+    }
+
+    .salary-type-row {
+      gap: 0;
+    }
+
+    .duration-field {
+      max-width: none;
+      transform: translateY(-8px) scaleY(0.96);
+      transform-origin: top center;
+
+      &.is-visible {
+        transform: translateY(0) scaleY(1);
+      }
+    }
+
+    .form-actions {
+      flex-direction: column;
+      align-items: stretch;
     }
   }
 }

@@ -1,6 +1,9 @@
 <div class="page-header">
-  <h1>My Applications</h1>
-  <p>Track the status of all your job applications</p>
+  <div>
+    <span class="eyebrow">Candidate Hub</span>
+    <h1>My Applications</h1>
+    <p>Track the roles you applied for, the current status, and the next action.</p>
+  </div>
 </div>
 
 <div *ngIf="isLoading" class="loading-state">
@@ -8,47 +11,164 @@
   <p>Loading your applications...</p>
 </div>
 
-<div *ngIf="!isLoading && applications.length === 0" class="empty-state section-card">
-  <mat-icon>work_off</mat-icon>
-  <h3>No applications yet</h3>
-  <p>Start applying for jobs to track them here.</p>
-  <button mat-raised-button color="primary" routerLink="/jobs">Browse Jobs</button>
-</div>
+<div class="applications-dashboard" *ngIf="!isLoading">
+  <div class="overview-grid" *ngIf="selectedStatus === 'ALL'">
+    <mat-card class="overview-card section-card">
+      <mat-card-content>
+        <strong>{{ totalApplications }}</strong>
+        <span>Applications sent</span>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="overview-card section-card">
+      <mat-card-content>
+        <strong>{{ totalShortlisted }}</strong>
+        <span>Shortlisted</span>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="overview-card section-card">
+      <mat-card-content>
+        <strong>{{ totalReviewed }}</strong>
+        <span>Reviewed</span>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="overview-card section-card">
+      <mat-card-content>
+        <strong>{{ totalOffered }}</strong>
+        <span>Offered</span>
+      </mat-card-content>
+    </mat-card>
+  </div>
 
-<div class="applications-grid" *ngIf="!isLoading && applications.length > 0">
-  <mat-card class="application-card section-card" *ngFor="let app of applications">
-    <mat-card-header>
-      <div class="company-avatar" mat-card-avatar>{{ app.company.charAt(0) }}</div>
-      <mat-card-title>{{ app.jobTitle }}</mat-card-title>
-      <mat-card-subtitle>{{ app.company }}</mat-card-subtitle>
-    </mat-card-header>
-
+  <mat-card class="filter-card section-card">
     <mat-card-content>
-      <div class="status-row">
-        <mat-chip [color]="getStatusColor(app.status)" selected>
-          <mat-icon matChipTrailingIcon>{{ getStatusIcon(app.status) }}</mat-icon>
-          {{ app.status | titlecase }}
-        </mat-chip>
-        <span class="applied-date">Applied {{ app.appliedAt | date:'mediumDate' }}</span>
+      <div class="filter-header">
+        <div>
+          <span class="section-label">Filter By Status</span>
+          <h2>View applications by outcome</h2>
+        </div>
       </div>
 
-      <!-- Progress tracker -->
-      <div class="progress-track">
-        <div class="track-step" [class.active]="['APPLIED','UNDER_REVIEW','SHORTLISTED'].includes(app.status)" [class.rejected]="app.status === 'REJECTED'">
-          <div class="step-dot"></div>
-          <span>Applied</span>
-        </div>
-        <div class="track-line" [class.active]="['UNDER_REVIEW','SHORTLISTED'].includes(app.status)"></div>
-        <div class="track-step" [class.active]="['UNDER_REVIEW','SHORTLISTED'].includes(app.status)">
-          <div class="step-dot"></div>
-          <span>Under Review</span>
-        </div>
-        <div class="track-line" [class.active]="app.status === 'SHORTLISTED'"></div>
-        <div class="track-step" [class.active]="app.status === 'SHORTLISTED'">
-          <div class="step-dot"></div>
-          <span>Shortlisted</span>
+      <div class="status-filter-group" aria-label="Filter applications by status">
+        <button
+          *ngFor="let option of statusOptions"
+          mat-stroked-button
+          type="button"
+          class="status-filter-btn"
+          [class.active]="selectedStatus === option.value"
+          (click)="onStatusChange(option.value)">
+          {{ option.label }}
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <div *ngIf="applications.length === 0" class="empty-state section-card inline-empty-state">
+    <mat-icon>work_off</mat-icon>
+    <h3>{{ emptyStateTitle }}</h3>
+    <p>{{ emptyStateDescription }}</p>
+    <button mat-flat-button color="primary" routerLink="/jobs">Browse Jobs</button>
+  </div>
+
+  <mat-card class="history-card section-card" *ngIf="applications.length > 0">
+    <mat-card-content>
+      <div class="history-header">
+        <div>
+          <h2>{{ historyTitle }}</h2>
+          <p>{{ historyDescription }}</p>
         </div>
       </div>
+
+      <div class="history-list">
+        <article class="history-item" *ngFor="let app of applications">
+          <div class="history-main">
+            <div class="history-icon">
+              <mat-icon>description</mat-icon>
+            </div>
+
+            <div class="history-copy">
+              <div class="history-topline">
+                <div>
+                  <h3>{{ app.jobTitle }}</h3>
+                  <p>{{ app.company }}</p>
+                </div>
+
+                <div class="history-actions">
+                  <span class="status-pill" [ngClass]="getStatusClass(app.status)">
+                    <mat-icon>{{ getStatusIcon(app.status) }}</mat-icon>
+                    {{ formatStatus(app.status) }}
+                  </span>
+                  <button mat-stroked-button color="primary" [routerLink]="['/jobs', app.jobId]">
+                    View Details
+                  </button>
+                </div>
+              </div>
+
+              <div class="meta-strip">
+                <span>
+                  <mat-icon>calendar_today</mat-icon>
+                  {{ app.appliedAt | date:'mediumDate' }}
+                </span>
+              </div>
+
+              <div class="document-actions">
+                <a *ngIf="hasResume(app)" mat-stroked-button color="primary" [href]="app.resumeUrl" target="_blank"
+                  rel="noopener noreferrer">
+                  <mat-icon>description</mat-icon>
+                  View Resume
+                </a>
+                <a *ngIf="hasOfferLetter(app)" mat-flat-button color="primary" [href]="app.offerLetterUrl"
+                  target="_blank" rel="noopener noreferrer">
+                  <mat-icon>workspace_premium</mat-icon>
+                  View Offer Letter
+                </a>
+              </div>
+
+              <div class="progress-track" *ngIf="app.status !== 'REJECTED'">
+                <div class="track-step" [class.active]="isStageActive(app.status, 'APPLIED')">
+                  <div class="step-dot"></div>
+                  <span>Applied</span>
+                </div>
+                <div class="track-line" [class.active]="isStageActive(app.status, 'UNDER_REVIEW')"></div>
+                <div class="track-step" [class.active]="isStageActive(app.status, 'UNDER_REVIEW')">
+                  <div class="step-dot"></div>
+                  <span>Under Review</span>
+                </div>
+                <div class="track-line" [class.active]="isStageActive(app.status, 'SHORTLISTED')"></div>
+                <div class="track-step" [class.active]="isStageActive(app.status, 'SHORTLISTED')">
+                  <div class="step-dot"></div>
+                  <span>Shortlisted</span>
+                </div>
+                <div class="track-line" [class.active]="isStageActive(app.status, 'INTERVIEW_SCHEDULED')"></div>
+                <div class="track-step" [class.active]="isStageActive(app.status, 'INTERVIEW_SCHEDULED')">
+                  <div class="step-dot"></div>
+                  <span>Interview</span>
+                </div>
+                <div class="track-line" [class.active]="isStageActive(app.status, 'OFFERED')"></div>
+                <div class="track-step" [class.active]="isStageActive(app.status, 'OFFERED')">
+                  <div class="step-dot"></div>
+                  <span>Offered</span>
+                </div>
+              </div>
+              <div class="rejected-summary" *ngIf="app.status === 'REJECTED'">
+                <p>This opportunity didn't work out, but there are many more roles waiting for you!</p>
+                <button mat-stroked-button color="primary" routerLink="/jobs">
+                  <mat-icon>search</mat-icon>
+                  Explore More Jobs
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <mat-paginator
+        *ngIf="totalApplications > pageSize"
+        [length]="totalApplications"
+        [pageIndex]="currentPage"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20]"
+        (page)="onPageChange($event)">
+      </mat-paginator>
     </mat-card-content>
   </mat-card>
 </div>

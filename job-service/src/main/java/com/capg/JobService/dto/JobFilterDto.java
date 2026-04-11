@@ -14,4 +14,6 @@ public class JobFilterDto {
 
     private Integer minExperience;
     private Integer maxExperience;
+
+    private String jobType;
 }

@@ -1,5 +1,6 @@
 package com.capg.authservice.service;
 
+import com.capg.authservice.dto.response.ForgotPasswordEvent;
 import com.capg.authservice.dto.response.UserDeletedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -16,6 +17,14 @@ public class EventPublisher {
         rabbitTemplate.convertAndSend(
                 "job-portal-exchange",
                 "job.user.deleted",
+                event
+        );
+    }
+
+    public void publishForgotPasswordEvent(ForgotPasswordEvent event) {
+        rabbitTemplate.convertAndSend(
+                "job-portal-exchange",
+                "job.user.password.reset.requested",
                 event
         );
     }

@@ -10,10 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,13 +25,11 @@ public class AdminApplicationServiceImpl implements AdminApplicationService {
     private final CloudinaryService cloudinaryService;
 
     @Override
-    @Cacheable(value = "adminAllApplications", key = "#authenticatedUserId + ':' + #role")
-    public List<ApplicationResponse> getAllApplications(Long authenticatedUserId, String role) {
+    @Cacheable(value = "adminAllApplications",
+            key = "#authenticatedUserId + ':' + #role + ':' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort")
+    public Page<ApplicationResponse> getAllApplications(Long authenticatedUserId, String role, Pageable pageable) {
         assertAdminRole(role);
-        return repository.findAll(Sort.by(Sort.Direction.DESC, "appliedAt"))
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return repository.findAll(pageable).map(this::toResponse);
     }
 
     @Override
@@ -59,6 +56,9 @@ public class AdminApplicationServiceImpl implements AdminApplicationService {
         if (app.getResumePublicId() != null) {
 
             cloudinaryService.deleteResume(app.getResumePublicId());
+        }
+        if (app.getOfferLetterPublicId() != null) {
+            cloudinaryService.deleteOfferLetter(app.getOfferLetterPublicId());
         }
 
         repository.delete(app);

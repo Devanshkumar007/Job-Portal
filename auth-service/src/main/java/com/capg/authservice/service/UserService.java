@@ -140,6 +140,25 @@ public class UserService {
         return userRepository.findAll(pageRequest);
     }
 
+    public Page<User> getUsersByRole(String role, int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+
+        try {
+            com.capg.authservice.enums.UserRole userRole =
+                    com.capg.authservice.enums.UserRole.valueOf(role.toUpperCase());
+
+            PageRequest pageRequest = PageRequest.of(
+                    safePage,
+                    safeSize,
+                    Sort.by(Sort.Direction.DESC, "id")
+            );
+            return userRepository.findByRole(userRole, pageRequest);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid role: " + role);
+        }
+    }
+
     private String normalizeEmail(String email) {
         if (email == null) {
             return null;

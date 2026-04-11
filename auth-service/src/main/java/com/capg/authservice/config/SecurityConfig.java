@@ -39,10 +39,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/forgot-password").permitAll()
+                        .requestMatchers("/api/auth/reset-password").permitAll()
                         .requestMatchers("/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/user/me").authenticated()
+                        .requestMatchers("/api/user/email/**").hasAnyRole("ADMIN", "RECRUITER")
                         .requestMatchers("/api/user/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

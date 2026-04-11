@@ -59,6 +59,18 @@ class JobControllerTest {
     }
 
     @Test
+    @DisplayName("getJobsByRecruiterId should return 200 and list payload")
+    void getJobsByRecruiterId_success() {
+        when(jobService.getJobsByRecruiterId(55L)).thenReturn(List.of(buildResponse(701L), buildResponse(702L)));
+
+        ResponseEntity<List<JobResponseDto>> response = jobController.getJobsByRecruiterId(55L);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, response.getBody().size());
+        assertEquals(701L, response.getBody().get(0).getId());
+    }
+
+    @Test
     @DisplayName("getJobById should return 200 and job body")
     void getJobById_success() {
         when(jobService.getJobById(301L)).thenReturn(buildResponse(301L));
@@ -136,6 +148,7 @@ class JobControllerTest {
         dto.setExperience(3);
         dto.setDescription("Backend role");
         dto.setRecruiterEmail("recruiter@acme.com");
+        dto.setJobType("FULL_TIME");
         return dto;
     }
 
@@ -143,6 +156,7 @@ class JobControllerTest {
         JobResponseDto dto = new JobResponseDto();
         dto.setId(id);
         dto.setTitle("Java Developer");
+        dto.setJobType("FULL_TIME");
         return dto;
     }
 }

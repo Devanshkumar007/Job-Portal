@@ -13,7 +13,9 @@ public class ApplicationResponse implements Serializable {
     private Long jobId;
     private String jobTitle;
     private String applicantEmail;
+    private String applicantName;
     private String resumeUrl;
+    private String offerLetterUrl;
     private String company;
     private ApplicationStatus status;
     private LocalDateTime appliedAt;

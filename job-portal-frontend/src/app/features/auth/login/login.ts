@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService, AuthResponse } from '../../../core/services/auth';
+import { getHttpErrorMessage } from '../../../core/utils/http-error';
 
 @Component({
   selector: 'app-login',
@@ -59,7 +60,19 @@ export class Login {
       },
       error: (err: any) => {
         this.isLoading = false;
-        this.snackBar.open(err.error?.message || 'Login failed. Please try again.', 'Close', { duration: 3000 });
+        this.snackBar.open(
+          getHttpErrorMessage(err, {
+            defaultMessage: 'Unable to sign in right now.',
+            statusMessages: {
+              400: 'Invalid credentials.',
+              401: 'Invalid credentials.',
+              403: 'Your account does not have access to sign in here.',
+              404: 'Invalid credentials.'
+            }
+          }),
+          'Close',
+          { duration: 3000 }
+        );
       }
     });
   }

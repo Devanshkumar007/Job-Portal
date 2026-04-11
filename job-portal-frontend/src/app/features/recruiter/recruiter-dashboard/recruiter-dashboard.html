@@ -1,85 +1,214 @@
 <div class="dashboard-container">
-
-  <!-- Header -->
   <div class="dashboard-header">
-    <div>
+    <div class="header-copy">
+      <span class="eyebrow">Recruiter Workspace</span>
       <h1>Recruiter Dashboard</h1>
-      <p>Welcome, {{ authService.getCurrentUser()?.name }}!</p>
+      <p>Track active jobs, applications, and hiring progress from one central view.</p>
     </div>
-    <button mat-raised-button color="primary" (click)="postNewJob()">
-      <mat-icon>add</mat-icon> Post New Job
+    <button mat-flat-button color="primary" (click)="postNewJob()" class="post-btn">
+      Post a job
+      <mat-icon>arrow_forward</mat-icon>
     </button>
   </div>
 
-  <!-- Stats -->
-  <div class="stats-row">
-    <mat-card class="stat-card">
-      <mat-icon>work</mat-icon>
-      <div>
-        <span class="stat-number">{{ jobs.length }}</span>
-        <span class="stat-label">Jobs Posted</span>
-      </div>
-    </mat-card>
+  <div *ngIf="isLoading" class="dashboard-loading">
+    <mat-icon class="spin">refresh</mat-icon>
+    <p>Loading your recruiter dashboard...</p>
   </div>
 
-  <!-- Jobs Table -->
-  <mat-card class="table-card">
-    <mat-card-header>
-      <mat-card-title>My Job Listings</mat-card-title>
-    </mat-card-header>
+  <ng-container *ngIf="!isLoading">
+    <div class="headline-stats">
+      <mat-card class="headline-card section-card">
+        <mat-card-content>
+          <strong>{{ summary.openRoles }}</strong>
+          <span>Open roles</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="headline-card section-card">
+        <mat-card-content>
+          <strong>{{ summary.totalApplications }}</strong>
+          <span>Applications</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="headline-card section-card">
+        <mat-card-content>
+          <strong>{{ summary.shortlistedCount }}</strong>
+          <span>Shortlisted</span>
+        </mat-card-content>
+      </mat-card>
+      <mat-card class="headline-card section-card">
+        <mat-card-content>
+          <strong>{{ summary.offersSent }}</strong>
+          <span>Offers sent</span>
+        </mat-card-content>
+      </mat-card>
+    </div>
 
-    <mat-card-content>
-      <div *ngIf="isLoading" class="loading">
-        <p>Loading your jobs...</p>
-      </div>
+    <div class="dashboard-grid">
+      <mat-card class="dashboard-panel section-card">
+        <mat-card-content>
+          <div class="panel-header">
+            <div>
+              <span class="section-label">Overview</span>
+              <h2>Recruitment activity</h2>
+            </div>
+            <div class="panel-icon">
+              <mat-icon>trending_up</mat-icon>
+            </div>
+          </div>
 
-      <div *ngIf="!isLoading && jobs.length === 0" class="empty-state">
-        <mat-icon>work_off</mat-icon>
-        <p>You haven't posted any jobs yet.</p>
-        <button mat-raised-button color="primary" (click)="postNewJob()">
-          Post Your First Job
-        </button>
-      </div>
+          <div class="mini-stat-grid">
+            <div class="mini-stat">
+              <strong>{{ summary.openRoles }}</strong>
+              <span>Open roles</span>
+            </div>
+            <div class="mini-stat">
+              <strong>{{ summary.totalApplications }}</strong>
+              <span>Applications</span>
+            </div>
+            <div class="mini-stat">
+              <strong>{{ summary.shortlistedCount }}</strong>
+              <span>Shortlisted</span>
+            </div>
+          </div>
 
-      <table mat-table [dataSource]="jobs" *ngIf="!isLoading && jobs.length > 0" class="jobs-table">
+          <div class="action-card">
+            <div class="action-icon">
+              <mat-icon>add</mat-icon>
+            </div>
+            <div class="action-copy">
+              <strong>Quick actions</strong>
+              <span>Move faster through the workflow</span>
+            </div>
+            <div class="action-buttons">
+              <button mat-flat-button color="primary" (click)="postNewJob()">Create job</button>
+              <button mat-stroked-button color="primary" [disabled]="recentJobs.length === 0" (click)="reviewLatestApplications()">
+                Review applications
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
 
-        <ng-container matColumnDef="title">
-          <th mat-header-cell *matHeaderCellDef>Job Title</th>
-          <td mat-cell *matCellDef="let job">{{ job.title }}</td>
-        </ng-container>
+      <mat-card class="dashboard-panel section-card">
+        <mat-card-content>
+          <div class="panel-header">
+            <div>
+              <span class="section-label">My Jobs</span>
+              <h2>Recent postings</h2>
+            </div>
+            <div class="panel-icon">
+              <mat-icon>work_outline</mat-icon>
+            </div>
+          </div>
 
-        <ng-container matColumnDef="company">
-          <th mat-header-cell *matHeaderCellDef>Company</th>
-          <td mat-cell *matCellDef="let job">{{ job.companyName }}</td>
-        </ng-container>
+          <div class="list-stack" *ngIf="recentJobs.length > 0; else noRecentJobs">
+            <article class="job-row" *ngFor="let job of recentJobs">
+              <div class="job-copy" (click)="viewJob(job.jobId)" style="cursor: pointer;">
+                <strong>{{ job.title }}</strong>
+                <span>{{ job.companyName }}</span>
+              </div>
+              <div class="job-row-actions">
+                <span class="job-badge" [ngClass]="getJobBadgeClass(job.status)">{{ job.status }}</span>
+                <button mat-icon-button color="primary" (click)="viewApplications(job.jobId)">
+                  <mat-icon>people</mat-icon>
+                </button>
+              </div>
+            </article>
+          </div>
 
-        <ng-container matColumnDef="location">
-          <th mat-header-cell *matHeaderCellDef>Location</th>
-          <td mat-cell *matCellDef="let job">{{ job.location }}</td>
-        </ng-container>
+          <ng-template #noRecentJobs>
+            <div class="panel-empty">
+              <mat-icon>work_off</mat-icon>
+              <p>No recruiter jobs found yet.</p>
+            </div>
+          </ng-template>
+        </mat-card-content>
+      </mat-card>
 
-        <ng-container matColumnDef="salary">
-          <th mat-header-cell *matHeaderCellDef>Salary</th>
-          <td mat-cell *matCellDef="let job">{{ formatSalary(job.salary) }}</td>
-        </ng-container>
+      <mat-card class="dashboard-panel section-card">
+        <mat-card-content>
+          <div class="panel-header">
+            <div>
+              <span class="section-label">Applications</span>
+              <h2>Recent candidates</h2>
+            </div>
+            <div class="panel-icon panel-icon-button" (click)="openApplicationsHub()">
+              <mat-icon>group</mat-icon>
+            </div>
+          </div>
 
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Actions</th>
-          <td mat-cell *matCellDef="let job">
-            <button mat-icon-button color="primary" (click)="viewApplications(job.id)"
-              matTooltip="View Applications">
-              <mat-icon>people</mat-icon>
-            </button>
-            <button mat-icon-button color="warn" (click)="deleteJob(job.id)"
-              matTooltip="Delete Job">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
+          <div class="list-stack" *ngIf="recentCandidates.length > 0; else noRecentCandidates">
+            <article class="candidate-row candidate-row-clickable" *ngFor="let candidate of recentCandidates" (click)="openCandidateApplications(candidate)">
+              <div class="candidate-copy">
+                <button type="button" class="candidate-profile-link" (click)="openCandidateProfile(candidate.applicantEmail, $event)">
+                  {{ candidate.applicantName || candidate.applicantEmail }}
+                </button>
+                <span>{{ candidate.applicantEmail }}</span>
+              </div>
+              <div class="candidate-row-actions">
+                <span class="candidate-job">{{ candidate.jobTitle }}</span>
+                <span class="candidate-status" [ngClass]="getCandidateStatusClass(candidate.status)">
+                  {{ formatCandidateStatus(candidate.status) }}
+                </span>
+              </div>
+            </article>
+          </div>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-    </mat-card-content>
-  </mat-card>
+          <ng-template #noRecentCandidates>
+            <div class="panel-empty">
+              <mat-icon>person_off</mat-icon>
+              <p>No recent candidates yet.</p>
+            </div>
+          </ng-template>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="dashboard-panel section-card">
+        <mat-card-content>
+          <div class="panel-header">
+            <div>
+              <span class="section-label">Progress</span>
+              <h2>Hiring pipeline</h2>
+            </div>
+            <div class="panel-icon">
+              <mat-icon>stacked_bar_chart</mat-icon>
+            </div>
+          </div>
+
+          <div class="pipeline-list">
+            <div class="pipeline-row">
+              <div class="pipeline-labels">
+                <span>Total applications received</span>
+                <strong>{{ summary.totalApplications }}</strong>
+              </div>
+              <div class="pipeline-track">
+                <span class="pipeline-fill" [style.width.%]="pipeline.applicationsReceivedPercent"></span>
+              </div>
+            </div>
+
+            <div class="pipeline-row">
+              <div class="pipeline-labels">
+                <span>Interviews scheduled</span>
+                <strong>{{ interviewScheduledCount }}</strong>
+              </div>
+              <div class="pipeline-track">
+                <span class="pipeline-fill secondary" [style.width.%]="pipeline.interviewsScheduledPercent"></span>
+              </div>
+            </div>
+
+            <div class="pipeline-row">
+              <div class="pipeline-labels">
+                <span>Offers sent</span>
+                <strong>{{ summary.offersSent }}</strong>
+              </div>
+              <div class="pipeline-track">
+                <span class="pipeline-fill tertiary" [style.width.%]="pipeline.offersSentPercent"></span>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </ng-container>
 </div>

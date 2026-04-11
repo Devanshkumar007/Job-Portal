@@ -1,0 +1,76 @@
+<h2 mat-dialog-title>Confirm Status Change</h2>
+
+<mat-dialog-content>
+  <p class="dialog-copy">
+    Update <strong>{{ data.application.applicantName || data.application.applicantEmail }}</strong> for
+    <strong>{{ data.application.jobTitle }}</strong> to
+    <strong>{{ data.nextStatus.replaceAll('_', ' ') }}</strong>.
+  </p>
+
+  <div class="status-note" *ngIf="requiresInterviewDetails">
+    <mat-icon>event_available</mat-icon>
+    <span>Interview details will be emailed to the candidate after you confirm.</span>
+  </div>
+
+  <div class="status-note" *ngIf="requiresOfferLetter">
+    <mat-icon>description</mat-icon>
+    <span>Upload offer PDF for emailing.</span>
+  </div>
+
+  <form [formGroup]="form" class="dialog-form">
+    <ng-container *ngIf="requiresInterviewDetails">
+      <mat-form-field appearance="outline">
+        <mat-label>Interview Link</mat-label>
+        <input matInput formControlName="interviewLink" placeholder="https://meet.google.com/...">
+        <mat-error *ngIf="form.get('interviewLink')?.hasError('required')">Interview link is required</mat-error>
+      </mat-form-field>
+
+      <div class="field-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Interview Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="interviewDate">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="form.get('interviewDate')?.hasError('required')">Interview date is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Interview Time</mat-label>
+          <input matInput type="time" formControlName="interviewTime">
+          <mat-icon matSuffix>schedule</mat-icon>
+          <mat-error *ngIf="form.get('interviewTime')?.hasError('required')">Interview time is required</mat-error>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Time Zone</mat-label>
+        <mat-select formControlName="timeZone">
+          <mat-option *ngFor="let timeZone of timeZoneOptions" [value]="timeZone">
+            {{ timeZone }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get('timeZone')?.hasError('required')">Time zone is required</mat-error>
+      </mat-form-field>
+    </ng-container>
+
+    <div class="upload-block" *ngIf="requiresOfferLetter">
+      <label class="upload-label" for="offerLetterFile">Offer Letter PDF</label>
+      <label class="upload-shell" for="offerLetterFile">
+        <mat-icon>upload_file</mat-icon>
+        <div>
+          <strong>{{ offerLetterFile?.name || 'Choose PDF file' }}</strong>
+          <span>{{ offerLetterFile ? 'Ready to upload' : 'Only PDF files are supported' }}</span>
+        </div>
+      </label>
+      <input id="offerLetterFile" type="file" accept="application/pdf,.pdf" (change)="onFileSelected($event)">
+      <p class="file-error" *ngIf="fileError">{{ fileError }}</p>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="!canSubmit" (click)="confirm()">
+    {{ actionLabel }}
+  </button>
+</mat-dialog-actions>

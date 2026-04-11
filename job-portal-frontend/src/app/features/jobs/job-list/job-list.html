@@ -1,34 +1,44 @@
 <!-- Hero Section -->
 <div class="hero-section">
-  <div class="hero-content">
-    <span class="hero-eyebrow">Career discovery platform</span>
-    <h1>Find Your Dream Job Today</h1>
-    <p>Browse curated openings, filter with precision, and move from search to application with less friction.</p>
+  <div class="hero-layout">
+    <div class="hero-copy">
+      <span class="hero-eyebrow">Career discovery platform</span>
+      <h1>Find Your Dream Job Today</h1>
+      <p>Browse curated openings, filter with precision, and move from search to application with less friction.</p>
 
-    <div class="search-bar">
-      <mat-form-field appearance="outline" class="search-input">
-        <mat-label>Search job title</mat-label>
-        <input matInput [(ngModel)]="searchKeyword" (keyup.enter)="searchJobs()"
-               placeholder="e.g. Java Developer, Data Analyst">
-        <mat-icon matPrefix>search</mat-icon>
-      </mat-form-field>
-      <button mat-raised-button color="primary" class="search-btn" (click)="searchJobs()">
-        Search
-      </button>
+      <div class="search-shell">
+        <div class="search-bar">
+          <label class="search-input" aria-label="Search job title">
+            <mat-icon>search</mat-icon>
+            <input
+              [(ngModel)]="searchKeyword"
+              (keyup.enter)="searchJobs()"
+              placeholder="Search job title">
+          </label>
+          <button mat-raised-button color="primary" class="search-btn" (click)="searchJobs()">
+            Search
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="hero-metrics">
-      <div class="metric">
-        <strong>{{ totalJobs }}</strong>
-        <span>Live job listings</span>
-      </div>
-      <div class="metric">
-        <strong>6 Filters</strong>
-        <span>For targeted search</span>
-      </div>
-      <div class="metric">
-        <strong>Fast Apply</strong>
-        <span>On every detail page</span>
+    <div class="hero-panel">
+      <div class="hero-panel-card">
+        <p class="panel-label">Platform Snapshot</p>
+        <div class="hero-metrics">
+          <div class="metric">
+            <strong>{{ totalJobs }}</strong>
+            <span>Live job listings</span>
+          </div>
+          <div class="metric">
+            <strong>6 Filters</strong>
+            <span>For targeted search</span>
+          </div>
+          <div class="metric">
+            <strong>Fast Apply</strong>
+            <span>On every detail page</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -64,6 +74,16 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
+        <mat-label>Job type</mat-label>
+        <mat-select [(ngModel)]="filters.jobType">
+          <mat-option [value]="undefined">All types</mat-option>
+          <mat-option *ngFor="let option of jobTypeOptions" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
         <mat-label>Minimum salary</mat-label>
         <input matInput type="number" [(ngModel)]="filters.minSalary" placeholder="e.g. 500000">
       </mat-form-field>
@@ -85,30 +105,33 @@
     </div>
 
     <div class="filters-actions">
-      <button mat-stroked-button (click)="clearFilters()">Reset</button>
-      <button mat-raised-button color="primary" (click)="applyFilters()">Apply Filters</button>
+      <div class="filter-tags" *ngIf="hasActiveFilters">
+        <span class="filter-tag" *ngIf="filters.title">Title: {{ filters.title }}</span>
+        <span class="filter-tag" *ngIf="filters.location">Location: {{ filters.location }}</span>
+        <span class="filter-tag" *ngIf="filters.companyName">Company: {{ filters.companyName }}</span>
+        <span class="filter-tag" *ngIf="filters.jobType">Type: {{ formatJobTypeLabel(filters.jobType) }}</span>
+        <span class="filter-tag" *ngIf="filters.minSalary">Min Salary: {{ filters.minSalary }}</span>
+        <span class="filter-tag" *ngIf="filters.maxSalary">Max Salary: {{ filters.maxSalary }}</span>
+        <span class="filter-tag" *ngIf="filters.minExperience !== undefined">Min Exp: {{ filters.minExperience }}</span>
+        <span class="filter-tag" *ngIf="filters.maxExperience !== undefined">Max Exp: {{ filters.maxExperience }}</span>
+      </div>
+      <div class="filter-buttons">
+        <button mat-stroked-button (click)="clearFilters()">Reset</button>
+        <button mat-raised-button color="primary" (click)="applyFilters()">Apply Filters</button>
+      </div>
     </div>
   </mat-card>
 
-  <div *ngIf="hasActiveFilters" class="active-banner">
-    <mat-icon>tune</mat-icon>
-    <span>Showing results using your selected filters.</span>
-  </div>
-
-  <!-- Loading -->
   <div *ngIf="isLoading" class="loading-state">
     <mat-icon class="spin">refresh</mat-icon>
     <p>Loading jobs...</p>
   </div>
 
-  <!-- No jobs -->
   <div *ngIf="!isLoading && jobs.length === 0" class="empty-state">
     <mat-icon>work_off</mat-icon>
     <p>{{ hasActiveFilters ? 'No jobs matched your filters.' : 'No jobs available right now. Check back later!' }}</p>
   </div>
 
-  
-  <!-- Job Cards Grid -->
   <div *ngIf="!isLoading && jobs.length > 0" class="jobs-grid">
     <mat-card *ngFor="let job of jobs" class="job-card" (click)="viewJob(job.id)">
       <button
@@ -126,6 +149,7 @@
           {{ job.companyName.charAt(0) }}
         </div>
         <div class="title-block">
+          <span class="inline-type" *ngIf="job.jobType">{{ formatJobType(job) }}</span>
           <h3>{{ job.title }}</h3>
           <p>{{ job.companyName }}</p>
         </div>
@@ -139,7 +163,7 @@
           </span>
           <span class="meta-item">
             <mat-icon>payments</mat-icon>
-            {{ formatSalary(job.salary) }}
+            {{ formatSalary(job) }}
           </span>
           <span class="meta-item">
             <mat-icon>work_history</mat-icon>
@@ -150,15 +174,16 @@
       </mat-card-content>
 
       <mat-card-actions>
-        <button mat-stroked-button color="primary" class="details-btn" (click)="viewJob(job.id); $event.stopPropagation()">
-          View Details
-        </button>
+        <div class="footer-left">
+          <button mat-stroked-button color="primary" class="details-btn" (click)="viewJob(job.id); $event.stopPropagation()">
+            {{ getViewButtonLabel() }}
+          </button>
+        </div>
         <span class="posted-date">{{ job.createdAt | date:'mediumDate' }}</span>
       </mat-card-actions>
     </mat-card>
   </div>
 
-  <!-- Pagination -->
   <mat-paginator
     *ngIf="totalJobs > pageSize"
     [length]="totalJobs"

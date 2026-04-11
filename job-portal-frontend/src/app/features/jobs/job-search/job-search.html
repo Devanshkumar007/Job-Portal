@@ -28,6 +28,16 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
+        <mat-label>Job type</mat-label>
+        <mat-select [(ngModel)]="filters.jobType">
+          <mat-option [value]="undefined">All types</mat-option>
+          <mat-option *ngFor="let option of jobTypeOptions" [value]="option.value">
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
         <mat-label>Minimum salary</mat-label>
         <input matInput type="number" [(ngModel)]="filters.minSalary" placeholder="e.g. 500000">
       </mat-form-field>
@@ -93,7 +103,7 @@
             </span>
             <span class="meta-item">
               <mat-icon>payments</mat-icon>
-              {{ formatSalary(job.salary) }}
+              {{ formatSalary(job) }}
             </span>
             <span class="meta-item">
               <mat-icon>work_history</mat-icon>

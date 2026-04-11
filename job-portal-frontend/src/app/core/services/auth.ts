@@ -34,6 +34,22 @@ export interface RegisterRequest {
   role: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export interface Job {
   id: number;
   title: string;
@@ -42,6 +58,8 @@ export interface Job {
   salary: number;
   experience: number;
   description: string;
+  jobType?: 'FULL_TIME' | 'PART_TIME' | 'INTERNSHIP';
+  internshipDurationMonths?: number | null;
   recruiterId: number;
   createdAt: string;
 }
@@ -53,6 +71,8 @@ export interface JobRequest {
   salary: number;
   experience: number;
   description: string;
+  jobType: 'FULL_TIME' | 'PART_TIME' | 'INTERNSHIP';
+  internshipDurationMonths?: number | null;
   recruiterEmail: string;
 }
 
@@ -61,10 +81,12 @@ export interface Application {
   userId: number;
   jobId: number;
   jobTitle: string;
+  applicantName?: string;
   applicantEmail: string;
   resumeUrl: string;
+  offerLetterUrl?: string;
   company: string;
-  status: 'APPLIED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'REJECTED';
+  status: 'APPLIED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'INTERVIEW_SCHEDULED' | 'OFFERED' | 'REJECTED';
   appliedAt: string;
 }
 
@@ -80,6 +102,7 @@ export interface JobSearchFilters {
   title?: string;
   location?: string;
   companyName?: string;
+  jobType?: 'FULL_TIME' | 'PART_TIME' | 'INTERNSHIP';
   minSalary?: number;
   maxSalary?: number;
   minExperience?: number;
@@ -111,10 +134,21 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request);
   }
 
+  forgotPassword(request: ForgotPasswordRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot-password`, request);
+  }
+
+  resetPassword(request: ResetPasswordRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/reset-password`, request);
+  }
+
+  changePassword(request: ChangePasswordRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/change-password`, request);
+  }
+
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    this.router.navigate(['/login']);
+    this.clearSession();
+    this.router.navigate(['/login'], { replaceUrl: true });
   }
 
   getToken(): string | null {
@@ -127,7 +161,18 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+
+    if (!token) {
+      return false;
+    }
+
+    if (this.isTokenExpired(token)) {
+      this.clearSession();
+      return false;
+    }
+
+    return true;
   }
 
   getRole(): string | null {
@@ -137,4 +182,19 @@ export class AuthService {
   isAdmin(): boolean { return this.getRole() === 'ADMIN'; }
   isRecruiter(): boolean { return this.getRole() === 'RECRUITER'; }
   isJobSeeker(): boolean { return this.getRole() === 'JOB_SEEKER'; }
+
+  private clearSession(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiryTime = payload.exp * 1000;
+      return Date.now() >= expiryTime;
+    } catch {
+      return true;
+    }
+  }
 }

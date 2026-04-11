@@ -15,6 +15,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
@@ -37,6 +41,9 @@ class AdminApplicationServiceImplTest {
     @Mock
     private ModelMapper modelMapper;
 
+    @Mock
+    private CloudinaryService cloudinaryService;
+
     @InjectMocks
     private AdminApplicationServiceImpl service;
 
@@ -47,27 +54,29 @@ class AdminApplicationServiceImplTest {
         app.setId(1L);
         ApplicationResponse response = new ApplicationResponse();
         response.setId(1L);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "appliedAt"));
 
-        when(repository.findAll(any(Sort.class))).thenReturn(List.of(app));
+        when(repository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(app), pageable, 1));
         when(modelMapper.map(app, ApplicationResponse.class)).thenReturn(response);
 
-        List<ApplicationResponse> result = service.getAllApplications(10L, "ADMIN");
+        Page<ApplicationResponse> result = service.getAllApplications(10L, "ADMIN", pageable);
 
-        assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getId());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1L, result.getContent().get(0).getId());
 
-        ArgumentCaptor<Sort> sortCaptor = ArgumentCaptor.forClass(Sort.class);
-        verify(repository).findAll(sortCaptor.capture());
-        Sort.Order order = sortCaptor.getValue().getOrderFor("appliedAt");
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(repository).findAll(pageableCaptor.capture());
+        Sort.Order order = pageableCaptor.getValue().getSort().getOrderFor("appliedAt");
         assertEquals(Sort.Direction.DESC, order.getDirection());
     }
 
     @Test
     @Order(2)
     void getAllApplications_non_admin_throws_unauthorized() {
+        Pageable pageable = PageRequest.of(0, 10);
         assertThrows(UnauthorizedException.class,
-                () -> service.getAllApplications(10L, "RECRUITER"));
-        verify(repository, never()).findAll(any(Sort.class));
+                () -> service.getAllApplications(10L, "RECRUITER", pageable));
+        verify(repository, never()).findAll(any(Pageable.class));
     }
 
     @Test
@@ -104,6 +113,20 @@ class AdminApplicationServiceImplTest {
 
         service.deleteApplication(3L, 10L, "ADMIN");
 
+        verify(repository).delete(app);
+    }
+
+    @Test
+    @Order(8)
+    void deleteApplication_with_offer_letter_deletes_cloudinary_asset() {
+        Application app = new Application();
+        app.setId(4L);
+        app.setOfferLetterPublicId("offer/123");
+        when(repository.findById(4L)).thenReturn(Optional.of(app));
+
+        service.deleteApplication(4L, 10L, "ADMIN");
+
+        verify(cloudinaryService).deleteOfferLetter("offer/123");
         verify(repository).delete(app);
     }
 

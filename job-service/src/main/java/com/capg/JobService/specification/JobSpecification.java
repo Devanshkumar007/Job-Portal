@@ -48,6 +48,13 @@ public class JobSpecification {
                 predicates.add(cb.lessThanOrEqualTo(root.get("experience"), filter.getMaxExperience()));
             }
 
+            if (filter.getJobType() != null) {
+                predicates.add(cb.equal(
+                        cb.lower(root.get("jobType").as(String.class)),
+                        filter.getJobType().toLowerCase()
+                ));
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }

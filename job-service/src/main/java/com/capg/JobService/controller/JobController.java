@@ -18,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor
@@ -64,6 +66,19 @@ public class JobController {
         log.info("Get all jobs request received: page={}, size={}, sortBy={}, direction={}", page, size, sortBy, direction);
         Page<JobResponseDto> jobs = jobService.getAllJobs(page, size, sortBy, direction);
         log.info("Get all jobs request completed: returnedElements={}", jobs.getNumberOfElements());
+        return ResponseEntity.ok(jobs);
+    }
+
+    @GetMapping(params = "recruiterId")
+    @Operation(summary = "Get jobs by recruiter ID", description = "Returns all jobs posted by the given recruiter.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Recruiter jobs fetched successfully")
+    })
+    public ResponseEntity<List<JobResponseDto>> getJobsByRecruiterId(
+            @RequestParam Long recruiterId) {
+        log.info("Get jobs by recruiter request received: recruiterId={}", recruiterId);
+        List<JobResponseDto> jobs = jobService.getJobsByRecruiterId(recruiterId);
+        log.info("Get jobs by recruiter request completed: recruiterId={}, count={}", recruiterId, jobs.size());
         return ResponseEntity.ok(jobs);
     }
 
@@ -141,5 +156,7 @@ public class JobController {
         log.info("Search jobs request completed: returnedElements={}", jobs.getNumberOfElements());
         return ResponseEntity.ok(jobs);
     }
+
+
 
 }

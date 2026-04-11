@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
@@ -36,6 +38,30 @@ public class JwtUtil {
                         System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String generatePasswordResetToken(User user, long expirationMs) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("purpose", "PASSWORD_RESET");
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getEmail())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean isValidPasswordResetToken(String token) {
+        try {
+            Claims claims = getClaims(token);
+            Object purpose = claims.get("purpose");
+            return "PASSWORD_RESET".equals(purpose) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // Extract email from token

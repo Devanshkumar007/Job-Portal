@@ -14,6 +14,8 @@ public class JobResponseDto implements Serializable {
         private Double salary;
         private Integer experience;
         private String description;
+        private String jobType;
+        private Integer internshipDurationMonths;
         private Long recruiterId;
         private LocalDateTime createdAt;
     }

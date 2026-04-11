@@ -53,6 +53,28 @@ public class AdminUserController {
         return ResponseEntity.ok(adminUserService.getAllUsers(authorization, role, page, size));
     }
 
+    @GetMapping("/role/{role}")
+    @Operation(summary = "Get users by role", description = "Fetch paginated users by role for admin users")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Users fetched successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid role"),
+            @ApiResponse(responseCode = "403", description = "Only admins can access this resource"),
+            @ApiResponse(responseCode = "503", description = "User service unreachable")
+    })
+    public ResponseEntity<PagedResponse<UserResponse>> getUsersByRole(
+            @Parameter(hidden = true) @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @RequestHeader("X-User-Id") Long requesterId,
+            @RequestHeader("X-User-Role") String requesterRole,
+            @PathVariable("role") String role,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info(
+                "Admin users request: action=getUsersByRole, requesterId={}, requesterRole={}, targetRole={}, page={}, size={}",
+                requesterId, requesterRole, role, page, size
+        );
+        return ResponseEntity.ok(adminUserService.getUsersByRole(authorization, requesterRole, role, page, size));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Get user by id", description = "Fetch user details by id")
     @ApiResponses(value = {

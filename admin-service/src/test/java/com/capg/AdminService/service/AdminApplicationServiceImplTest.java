@@ -2,6 +2,7 @@ package com.capg.AdminService.service;
 
 import com.capg.AdminService.client.ApplicationsClient;
 import com.capg.AdminService.dto.ApplicationResponse;
+import com.capg.AdminService.dto.PagedResponse;
 import com.capg.AdminService.exception.UnauthorizedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,9 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
@@ -28,32 +26,40 @@ class AdminApplicationServiceImplTest {
     private AdminApplicationServiceImpl adminApplicationService;
 
     @Test
-    @DisplayName("getAllApplications should return application list when requester role is ADMIN")
+    @DisplayName("getAllApplications should return paged applications when requester role is ADMIN")
     void getAllApplications_ShouldReturnApplications_WhenRoleIsAdmin() {
         Long requesterId = 10L;
         String role = "ADMIN";
-        ApplicationResponse first = new ApplicationResponse();
-        first.setId(1L);
-        ApplicationResponse second = new ApplicationResponse();
-        second.setId(2L);
-        List<ApplicationResponse> expected = List.of(first, second);
+        int page = 0;
+        int size = 10;
+        String sortBy = "appliedAt";
+        String direction = "desc";
+        String sort = "appliedAt,desc";
+        PagedResponse<ApplicationResponse> expected = new PagedResponse<>();
+        expected.setNumber(page);
+        expected.setSize(size);
 
-        when(applicationsClient.getAllApplications(requesterId, role)).thenReturn(expected);
+        when(applicationsClient.getAllApplications(page, size, sort, requesterId, role)).thenReturn(expected);
 
-        List<ApplicationResponse> actual = adminApplicationService.getAllApplications(requesterId, role);
+        PagedResponse<ApplicationResponse> actual =
+                adminApplicationService.getAllApplications(requesterId, role, page, size, sortBy, direction);
 
         assertEquals(expected, actual);
-        verify(applicationsClient).getAllApplications(requesterId, role);
+        verify(applicationsClient).getAllApplications(page, size, sort, requesterId, role);
     }
 
     @Test
     @DisplayName("getAllApplications should reject null role and avoid downstream client call")
     void getAllApplications_ShouldThrowUnauthorized_WhenRoleIsNull() {
         Long requesterId = 10L;
+        int page = 0;
+        int size = 10;
+        String sortBy = "appliedAt";
+        String direction = "desc";
 
         assertThrows(UnauthorizedException.class,
-                () -> adminApplicationService.getAllApplications(requesterId, null));
-        verify(applicationsClient, never()).getAllApplications(requesterId, null);
+                () -> adminApplicationService.getAllApplications(requesterId, null, page, size, sortBy, direction));
+        verify(applicationsClient, never()).getAllApplications(page, size, "appliedAt,desc", requesterId, null);
     }
 
     @Test

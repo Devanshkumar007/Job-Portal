@@ -1,57 +1,94 @@
 <div class="page-header">
-  <h1>Manage Jobs</h1>
-  <p>Monitor and manage all job postings on the platform</p>
+  <div>
+    <span class="eyebrow">Admin Panel</span>
+    <h1>Manage Jobs</h1>
+    <p>Monitor and manage all job postings on the platform</p>
+  </div>
+  <div class="header-pill">
+    <span>Total Listings</span>
+    <strong>{{ totalJobs }}</strong>
+  </div>
 </div>
 
 <mat-card class="table-card section-card">
-  <mat-card-header>
-    <mat-card-title>All Jobs</mat-card-title>
-    <mat-card-subtitle>{{ jobs.length }} total jobs</mat-card-subtitle>
-  </mat-card-header>
-
   <mat-card-content>
+    <div class="card-topbar">
+      <div>
+        <span class="section-label">Listings</span>
+        <h2>All Jobs</h2>
+        <p>{{ jobs.length }} shown on this page of {{ totalJobs }} total jobs</p>
+      </div>
+    </div>
+
     <div *ngIf="isLoading" class="loading">
       <mat-icon class="spin">refresh</mat-icon>
       <p>Loading jobs...</p>
     </div>
 
-    <table mat-table [dataSource]="jobs" *ngIf="!isLoading" class="full-table">
-      <ng-container matColumnDef="title">
-        <th mat-header-cell *matHeaderCellDef>Job Title</th>
-        <td mat-cell *matCellDef="let j">{{ j.title }}</td>
-      </ng-container>
+    <div class="table-wrap" *ngIf="!isLoading">
+      <table mat-table [dataSource]="jobs" class="full-table">
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Job Title</th>
+          <td mat-cell *matCellDef="let j">
+            <div class="title-cell">
+              <strong>{{ j.title }}</strong>
+              <span>{{ j.companyName }}</span>
+            </div>
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="company">
-        <th mat-header-cell *matHeaderCellDef>Company</th>
-        <td mat-cell *matCellDef="let j">{{ j.companyName }}</td>
-      </ng-container>
+        <ng-container matColumnDef="company">
+          <th mat-header-cell *matHeaderCellDef>Company</th>
+          <td mat-cell *matCellDef="let j">{{ j.companyName }}</td>
+        </ng-container>
 
-      <ng-container matColumnDef="location">
-        <th mat-header-cell *matHeaderCellDef>Location</th>
-        <td mat-cell *matCellDef="let j">{{ j.location }}</td>
-      </ng-container>
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef>Location</th>
+          <td mat-cell *matCellDef="let j">
+            <span class="subtle-text">{{ j.location }}</span>
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="salary">
-        <th mat-header-cell *matHeaderCellDef>Salary</th>
-        <td mat-cell *matCellDef="let j">{{ formatSalary(j.salary) }}</td>
-      </ng-container>
+        <ng-container matColumnDef="salary">
+          <th mat-header-cell *matHeaderCellDef>Salary</th>
+          <td mat-cell *matCellDef="let j">
+            <span class="subtle-text">{{ formatSalary(j) }}</span>
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="experience">
-        <th mat-header-cell *matHeaderCellDef>Experience</th>
-        <td mat-cell *matCellDef="let j">{{ j.experience }} yrs</td>
-      </ng-container>
+        <ng-container matColumnDef="experience">
+          <th mat-header-cell *matHeaderCellDef>Experience</th>
+          <td mat-cell *matCellDef="let j">
+            <span class="subtle-text">{{ j.experience }} yrs</span>
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Actions</th>
-        <td mat-cell *matCellDef="let j">
-          <button mat-icon-button color="warn" (click)="deleteJob(j.id)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let j">
+            <button mat-icon-button color="warn" (click)="deleteJob($event, j.id)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns;"
+          class="job-row"
+          (click)="viewJob(row.id)">
+        </tr>
+      </table>
+
+      <mat-paginator
+        *ngIf="totalJobs > pageSize"
+        [length]="totalJobs"
+        [pageIndex]="currentPage"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20]"
+        (page)="onPageChange($event)">
+      </mat-paginator>
+    </div>
   </mat-card-content>
 </mat-card>

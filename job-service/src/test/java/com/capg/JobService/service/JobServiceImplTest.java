@@ -5,7 +5,11 @@ import com.capg.JobService.dto.JobDeletedEvent;
 import com.capg.JobService.dto.JobFilterDto;
 import com.capg.JobService.dto.JobRequestDto;
 import com.capg.JobService.dto.JobResponseDto;
+import com.capg.JobService.dto.RecruiterJobSummaryDto;
+import com.capg.JobService.dto.RecruiterOpenRolesCountDto;
+import com.capg.JobService.dto.RecruiterRecentJobDto;
 import com.capg.JobService.entity.Job;
+import com.capg.JobService.entity.JobStatus;
 import com.capg.JobService.exceptions.JobNotFoundException;
 import com.capg.JobService.exceptions.UnauthorizedException;
 import com.capg.JobService.repository.JobRepository;
@@ -33,8 +37,10 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -333,6 +339,131 @@ class JobServiceImplTest {
         assertEquals(PageRequest.of(0, 5).getPageSize(), pageableCaptor.getValue().getPageSize());
     }
 
+    @Test
+    @DisplayName("getRecruiterJobIds should return only recruiter owned ids for recruiter role")
+    void getRecruiterJobIds_success() {
+        when(jobRepository.findJobIdsByRecruiterId(100L)).thenReturn(List.of(11L, 12L, 13L));
+
+        List<Long> result = jobService.getRecruiterJobIds(100L, 100L, "RECRUITER");
+
+        assertEquals(List.of(11L, 12L, 13L), result);
+    }
+
+    @Test
+    @DisplayName("getRecruiterJobIds should allow internal service role")
+    void getRecruiterJobIds_internalService_success() {
+        when(jobRepository.findJobIdsByRecruiterId(100L)).thenReturn(List.of(11L, 12L));
+
+        List<Long> result = jobService.getRecruiterJobIds(100L, null, "INTERNAL_SERVICE");
+
+        assertEquals(List.of(11L, 12L), result);
+    }
+
+    @Test
+    @DisplayName("getRecruiterJobIds should throw for non recruiter and non internal role")
+    void getRecruiterJobIds_forbidden() {
+        UnauthorizedException ex = assertThrows(
+                UnauthorizedException.class,
+                () -> jobService.getRecruiterJobIds(100L, 100L, "CANDIDATE")
+        );
+
+        assertEquals("Only recruiters or internal service can access this endpoint", ex.getMessage());
+        verify(jobRepository, never()).findJobIdsByRecruiterId(any());
+    }
+
+    @Test
+    @DisplayName("getRecruiterJobIds should throw when recruiter requests other recruiter data")
+    void getRecruiterJobIds_recruiterMismatch_forbidden() {
+        UnauthorizedException ex = assertThrows(
+                UnauthorizedException.class,
+                () -> jobService.getRecruiterJobIds(100L, 101L, "RECRUITER")
+        );
+
+        assertEquals("Recruiters can only access their own recruiter dashboard data", ex.getMessage());
+        verify(jobRepository, never()).findJobIdsByRecruiterId(any());
+    }
+
+    @Test
+    @DisplayName("getRecruiterOpenRolesCount should return active jobs count")
+    void getRecruiterOpenRolesCount_success() {
+        when(jobRepository.countByRecruiterIdAndStatus(101L, JobStatus.ACTIVE)).thenReturn(7L);
+
+        RecruiterOpenRolesCountDto result = jobService.getRecruiterOpenRolesCount(101L, 101L, "RECRUITER");
+
+        assertEquals(7L, result.getOpenRoles());
+    }
+
+    @Test
+    @DisplayName("getRecruiterRecentJobs should enforce max limit and sort by createdAt desc")
+    void getRecruiterRecentJobs_success() {
+        Job job1 = buildJob(701L, 88L);
+        job1.setStatus(JobStatus.ACTIVE);
+        Job job2 = buildJob(702L, 88L);
+        job2.setStatus(JobStatus.CLOSED);
+
+        when(jobRepository.findByRecruiterId(any(Long.class), any(Pageable.class))).thenReturn(List.of(job1, job2));
+
+        List<RecruiterRecentJobDto> result = jobService.getRecruiterRecentJobs(88L, 20, 88L, "RECRUITER");
+
+        assertEquals(2, result.size());
+        assertEquals(701L, result.get(0).getJobId());
+        assertEquals("ACTIVE", result.get(0).getStatus());
+        assertEquals("CLOSED", result.get(1).getStatus());
+        assertNotNull(result.get(0).getCreatedAt());
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(jobRepository).findByRecruiterId(eq(88L), pageableCaptor.capture());
+        assertEquals(10, pageableCaptor.getValue().getPageSize());
+        Sort.Order order = pageableCaptor.getValue().getSort().getOrderFor("createdAt");
+        assertNotNull(order);
+        assertTrue(order.isDescending());
+    }
+
+    @Test
+    @DisplayName("getRecruiterRecentJobs should default to 5 when invalid limit is passed")
+    void getRecruiterRecentJobs_defaultLimit() {
+        when(jobRepository.findByRecruiterId(any(Long.class), any(Pageable.class))).thenReturn(List.of());
+
+        jobService.getRecruiterRecentJobs(90L, 0, 90L, "RECRUITER");
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(jobRepository).findByRecruiterId(eq(90L), pageableCaptor.capture());
+        assertEquals(5, pageableCaptor.getValue().getPageSize());
+    }
+
+    @Test
+    @DisplayName("getRecruiterJobSummary should return total and status counts")
+    void getRecruiterJobSummary_success() {
+        when(jobRepository.countByRecruiterId(10L)).thenReturn(20L);
+        when(jobRepository.countByRecruiterIdAndStatus(10L, JobStatus.ACTIVE)).thenReturn(11L);
+        when(jobRepository.countByRecruiterIdAndStatus(10L, JobStatus.DRAFT)).thenReturn(6L);
+        when(jobRepository.countByRecruiterIdAndStatus(10L, JobStatus.CLOSED)).thenReturn(3L);
+
+        RecruiterJobSummaryDto result = jobService.getRecruiterJobSummary(10L, null, "INTERNAL_SERVICE");
+
+        assertEquals(20L, result.getTotalJobs());
+        assertEquals(11L, result.getActiveJobs());
+        assertEquals(6L, result.getDraftJobs());
+        assertEquals(3L, result.getClosedJobs());
+    }
+
+    @Test
+    @DisplayName("getJobsByRecruiterId should return mapped recruiter jobs")
+    void getJobsByRecruiterId_success() {
+        Job job1 = buildJob(801L, 42L);
+        Job job2 = buildJob(802L, 42L);
+
+        when(jobRepository.findAllByRecruiterId(42L)).thenReturn(List.of(job1, job2));
+        when(modelMapper.map(job1, JobResponseDto.class)).thenReturn(buildResponse(801L, 42L));
+        when(modelMapper.map(job2, JobResponseDto.class)).thenReturn(buildResponse(802L, 42L));
+
+        List<JobResponseDto> result = jobService.getJobsByRecruiterId(42L);
+
+        assertEquals(2, result.size());
+        assertEquals(801L, result.get(0).getId());
+        assertEquals(802L, result.get(1).getId());
+    }
+
     private JobRequestDto buildRequest() {
         JobRequestDto dto = new JobRequestDto();
         dto.setTitle("Java Developer");
@@ -342,6 +473,7 @@ class JobServiceImplTest {
         dto.setExperience(3);
         dto.setDescription("Backend role");
         dto.setRecruiterEmail("recruiter@acme.com");
+        dto.setJobType("FULL_TIME");
         return dto;
     }
 
@@ -354,6 +486,8 @@ class JobServiceImplTest {
         job.setSalary(12.5);
         job.setExperience(3);
         job.setDescription("Backend role");
+        job.setJobType(com.capg.JobService.entity.JobType.FULL_TIME);
+        job.setStatus(JobStatus.ACTIVE);
         job.setRecruiterId(recruiterId);
         job.setCreatedAt(LocalDateTime.now());
         return job;
@@ -368,6 +502,7 @@ class JobServiceImplTest {
         dto.setSalary(12.5);
         dto.setExperience(3);
         dto.setDescription("Backend role");
+        dto.setJobType("FULL_TIME");
         dto.setRecruiterId(recruiterId);
         dto.setCreatedAt(LocalDateTime.now());
         return dto;

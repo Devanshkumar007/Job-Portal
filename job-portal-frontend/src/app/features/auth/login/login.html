@@ -4,6 +4,12 @@
     <h1>Login to continue your job search journey.</h1>
     <p>Track applications, explore curated openings, and jump back into your hiring flow in one place.</p>
 
+    <div class="feature-list">
+      <span>Track every application stage</span>
+      <span>Manage recruiter workflows faster</span>
+      <span>Search smarter with cleaner filters</span>
+    </div>
+
     <div class="auth-stats">
       <div class="stat-card">
         <strong>Smart Search</strong>
@@ -40,6 +46,10 @@
           <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
           <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">Minimum 6 characters</mat-error>
         </mat-form-field>
+
+        <div class="inline-link-row">
+          <a routerLink="/forgot-password">Forgot password?</a>
+        </div>
 
         <button mat-raised-button color="primary" type="submit" class="full-width submit-btn" [disabled]="isLoading">
           {{ isLoading ? 'Signing in...' : 'Login' }}

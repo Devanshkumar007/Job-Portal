@@ -1,8 +1,12 @@
 package com.capg.authservice.service;
 
 import com.capg.authservice.dto.request.LoginRequest;
+import com.capg.authservice.dto.request.ForgotPasswordRequest;
+import com.capg.authservice.dto.request.ResetPasswordRequest;
+import com.capg.authservice.dto.request.ChangePasswordRequest;
 import com.capg.authservice.dto.request.RegisterRequest;
 import com.capg.authservice.dto.response.AuthResponse;
+import com.capg.authservice.dto.response.ForgotPasswordEvent;
 import com.capg.authservice.entity.User;
 import com.capg.authservice.enums.UserRole;
 import com.capg.authservice.exception.DuplicateEmailException;
@@ -13,8 +17,11 @@ import com.capg.authservice.repository.UserRepository;
 import com.capg.authservice.security.JwtUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -30,6 +37,15 @@ public class AuthService {
 
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired
+    private EventPublisher eventPublisher;
+
+    @Value("${auth.password-reset.expiration-ms:900000}")
+    private long passwordResetExpirationMs;
+
+    @Value("${auth.password-reset.base-url}")
+    private String passwordResetBaseUrl;
 
 
     public AuthResponse register(RegisterRequest request) {
@@ -87,6 +103,66 @@ public class AuthService {
         return buildAuthResponse(user, token, "Login successful!");
     }
 
+    public String forgotPassword(ForgotPasswordRequest request) {
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        Optional<User> userOptional = userRepository.findByEmailIgnoreCase(normalizedEmail);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            String resetToken = jwtUtil.generatePasswordResetToken(user, passwordResetExpirationMs);
+            String resetLink = buildResetLink(resetToken);
+
+            ForgotPasswordEvent event = new ForgotPasswordEvent(
+                    user.getEmail(),
+                    user.getName(),
+                    resetLink
+            );
+            eventPublisher.publishForgotPasswordEvent(event);
+        }
+
+        return "If the email is registered, a reset link has been sent.";
+    }
+
+    public String resetPassword(ResetPasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Password and confirm password do not match");
+        }
+
+        if (!jwtUtil.isValidPasswordResetToken(request.getToken())) {
+            throw new IllegalArgumentException("Invalid or expired reset token");
+        }
+
+        String email = normalizeEmail(jwtUtil.extractEmail(request.getToken()));
+        User user = userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found with email: " + email));
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return "Password reset successful.";
+    }
+
+    public String changePassword(String email, ChangePasswordRequest request) {
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Password and confirm password do not match");
+        }
+
+        String normalizedEmail = normalizeEmail(email);
+        User user = userRepository.findByEmailIgnoreCase(normalizedEmail)
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found with email: " + normalizedEmail));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return "Password changed successfully.";
+    }
+
     private AuthResponse buildAuthResponse(User user, String token,
                                            String message) {
         AuthResponse response = modelMapper.map(user, AuthResponse.class);
@@ -97,5 +173,10 @@ public class AuthService {
 
     private String normalizeEmail(String email) {
         return email == null ? null : email.trim().toLowerCase();
+    }
+
+    private String buildResetLink(String token) {
+        String separator = passwordResetBaseUrl.contains("?") ? "&" : "?";
+        return passwordResetBaseUrl + separator + "token=" + token;
     }
 }

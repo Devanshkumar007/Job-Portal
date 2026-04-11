@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Job, JobSearchFilters } from '../../../core/services/auth';
 import { JobService } from '../../../core/services/job';
@@ -23,6 +24,7 @@ import { JobService } from '../../../core/services/job';
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
+    MatSelectModule,
     MatPaginatorModule
   ],
   templateUrl: './job-search.html',
@@ -38,6 +40,11 @@ export class JobSearch implements OnInit {
   hasSearched = false;
   sortBy = 'createdAt';
   direction: 'asc' | 'desc' = 'desc';
+  readonly jobTypeOptions = [
+    { value: 'FULL_TIME', label: 'Full Time' },
+    { value: 'PART_TIME', label: 'Part Time' },
+    { value: 'INTERNSHIP', label: 'Internship' }
+  ] as const;
 
   constructor(
     private readonly jobService: JobService,
@@ -51,6 +58,7 @@ export class JobSearch implements OnInit {
         title: params.get('title')?.trim() || undefined,
         location: params.get('location')?.trim() || undefined,
         companyName: params.get('companyName')?.trim() || undefined,
+        jobType: (params.get('jobType')?.trim() as JobSearchFilters['jobType']) || undefined,
         minSalary: this.toNumber(params.get('minSalary')),
         maxSalary: this.toNumber(params.get('maxSalary')),
         minExperience: this.toNumber(params.get('minExperience')),
@@ -95,8 +103,11 @@ export class JobSearch implements OnInit {
     this.router.navigate(['/jobs', id]);
   }
 
-  formatSalary(salary: number): string {
-    return `₹${(salary / 100000).toFixed(1)} LPA`;
+  formatSalary(job: Job): string {
+    if (job.jobType === 'INTERNSHIP') {
+      return `₹${Math.round(job.salary).toLocaleString('en-IN')}/month`;
+    }
+    return `₹${(job.salary / 100000).toFixed(1)} LPA`;
   }
 
   private fetchJobs(): void {

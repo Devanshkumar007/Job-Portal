@@ -8,28 +8,48 @@
   .auth-copy {
     flex: 1;
     max-width: 520px;
-    color: white;
+    color: var(--slate-900);
+    padding: 0;
 
     .eyebrow {
       display: inline-flex;
       padding: 8px 14px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(37, 99, 235, 0.1);
       margin-bottom: 18px;
       font-weight: 600;
+      color: var(--blue-dark);
     }
 
     h1 {
       font-size: clamp(2.2rem, 4vw, 3.4rem);
       line-height: 1.04;
       margin: 0 0 14px;
+      text-shadow: none;
     }
 
     p {
-      color: rgba(255, 255, 255, 0.82);
+      color: var(--slate-600);
       line-height: 1.7;
       margin: 0 0 24px;
       font-size: 1.02rem;
+    }
+
+    .feature-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 24px;
+
+      span {
+        padding: 9px 14px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.08);
+        border: 1px solid rgba(191, 219, 254, 0.95);
+        color: var(--blue-dark);
+        font-size: 0.86rem;
+        font-weight: 600;
+      }
     }
 
     .auth-stats {
@@ -41,8 +61,8 @@
     .stat-card {
       padding: 18px;
       border-radius: 20px;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(243, 247, 255, 0.92));
+      border: 1px solid rgba(219, 227, 238, 0.92);
       backdrop-filter: blur(10px);
 
       strong,
@@ -52,10 +72,11 @@
 
       strong {
         margin-bottom: 6px;
+        color: var(--slate-900);
       }
 
       span {
-        color: rgba(255, 255, 255, 0.78);
+        color: var(--slate-600);
         line-height: 1.5;
       }
     }
@@ -64,20 +85,25 @@
   .login-card {
     width: 100%;
     max-width: 430px;
-    padding: 28px 22px;
+    padding: 32px 24px;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12);
 
     mat-card-header {
-      margin-bottom: 18px;
+      margin-bottom: 20px;
 
       mat-card-title {
         font-size: 2rem;
-        font-weight: 700;
+        font-weight: 800;
+      }
+
+      mat-card-subtitle {
+        color: var(--slate-500);
       }
     }
 
     .full-width {
       width: 100%;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .submit-btn {
@@ -88,7 +114,31 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      border-radius: 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--blue), var(--indigo));
+      box-shadow: 0 18px 30px rgba(37, 99, 235, 0.22);
+      color: #fff;
+
+      .mdc-button__label,
+      mat-icon {
+        color: #fff;
+      }
+    }
+
+    .inline-link-row {
+      display: flex;
+      justify-content: flex-end;
+      margin: -4px 0 10px;
+
+      a {
+        color: #0d4ea6;
+        text-decoration: none;
+        font-weight: 600;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
     }
 
     .register-link {

@@ -2,6 +2,8 @@ package com.capg.JobService.service;
 
 import com.capg.JobService.dto.*;
 import com.capg.JobService.entity.Job;
+import com.capg.JobService.entity.JobStatus;
+import com.capg.JobService.entity.JobType;
 import com.capg.JobService.exceptions.JobNotFoundException;
 import com.capg.JobService.exceptions.UnauthorizedException;
 import com.capg.JobService.repository.JobRepository;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Service
@@ -41,6 +44,7 @@ public class JobServiceImpl implements JobService {
         }
 
         Job job = modelMapper.map(dto, Job.class);
+        applyJobTypeFields(job, dto);
 
         job.setRecruiterId(recruiterId);
         job.setCreatedAt(LocalDateTime.now());
@@ -56,7 +60,7 @@ public class JobServiceImpl implements JobService {
 
         eventPublisher.publishJobCreatedEvent(event);
 
-        return modelMapper.map(saved, JobResponseDto.class);
+        return toResponse(saved);
     }
 
 
@@ -73,7 +77,7 @@ public class JobServiceImpl implements JobService {
 
         Page<Job> jobPage = jobRepository.findAll(pageable);
 
-        return jobPage.map(job -> modelMapper.map(job, JobResponseDto.class));
+        return jobPage.map(this::toResponse);
     }
 
 
@@ -84,7 +88,7 @@ public class JobServiceImpl implements JobService {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new JobNotFoundException("Job not found"));
 
-        return modelMapper.map(job, JobResponseDto.class);
+        return toResponse(job);
     }
 
 
@@ -102,10 +106,11 @@ public class JobServiceImpl implements JobService {
         }
 
         modelMapper.map(dto, job); // update fields
+        applyJobTypeFields(job, dto);
 
         Job updated = jobRepository.save(job);
 
-        return modelMapper.map(updated, JobResponseDto.class);
+        return toResponse(updated);
     }
 
 
@@ -170,6 +175,110 @@ public class JobServiceImpl implements JobService {
                 pageable
         );
 
-        return jobPage.map(job -> modelMapper.map(job, JobResponseDto.class));
+        return jobPage.map(this::toResponse);
+    }
+
+    @Override
+    public List<Long> getRecruiterJobIds(Long recruiterId, Long requesterId, String role) {
+        validateInternalRecruiterAccess(recruiterId, requesterId, role);
+        return jobRepository.findJobIdsByRecruiterId(recruiterId);
+    }
+
+    @Override
+    public RecruiterOpenRolesCountDto getRecruiterOpenRolesCount(Long recruiterId, Long requesterId, String role) {
+        validateInternalRecruiterAccess(recruiterId, requesterId, role);
+        long openRoles = jobRepository.countByRecruiterIdAndStatus(recruiterId, JobStatus.ACTIVE);
+        return new RecruiterOpenRolesCountDto(openRoles);
+    }
+
+    @Override
+    public List<RecruiterRecentJobDto> getRecruiterRecentJobs(Long recruiterId, int limit, Long requesterId, String role) {
+        validateInternalRecruiterAccess(recruiterId, requesterId, role);
+        int sanitizedLimit = limit <= 0 ? 5 : Math.min(limit, 10);
+        List<Job> jobs = jobRepository.findByRecruiterId(
+                recruiterId,
+                PageRequest.of(0, sanitizedLimit, Sort.by("createdAt").descending())
+        );
+
+        return jobs.stream()
+                .map(job -> new RecruiterRecentJobDto(
+                        job.getId(),
+                        job.getTitle(),
+                        job.getCompanyName(),
+                        job.getStatus() == null ? null : job.getStatus().name(),
+                        job.getCreatedAt()
+                ))
+                .toList();
+    }
+
+    @Override
+    public RecruiterJobSummaryDto getRecruiterJobSummary(Long recruiterId, Long requesterId, String role) {
+        validateInternalRecruiterAccess(recruiterId, requesterId, role);
+
+        long totalJobs = jobRepository.countByRecruiterId(recruiterId);
+        long activeJobs = jobRepository.countByRecruiterIdAndStatus(recruiterId, JobStatus.ACTIVE);
+        long draftJobs = jobRepository.countByRecruiterIdAndStatus(recruiterId, JobStatus.DRAFT);
+        long closedJobs = jobRepository.countByRecruiterIdAndStatus(recruiterId, JobStatus.CLOSED);
+
+        return new RecruiterJobSummaryDto(totalJobs, activeJobs, draftJobs, closedJobs);
+    }
+
+    @Override
+    public List<JobResponseDto> getJobsByRecruiterId(Long recruiterId) {
+        return jobRepository.findAllByRecruiterId(recruiterId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private void applyJobTypeFields(Job job, JobRequestDto dto) {
+        JobType parsedJobType = parseJobType(dto.getJobType());
+
+        if (parsedJobType == JobType.INTERNSHIP) {
+            if (dto.getInternshipDurationMonths() == null) {
+                throw new IllegalArgumentException("internshipDurationMonths is required when jobType is INTERNSHIP");
+            }
+            job.setInternshipDurationMonths(dto.getInternshipDurationMonths());
+        } else {
+            if (dto.getInternshipDurationMonths() != null) {
+                throw new IllegalArgumentException("internshipDurationMonths must be null unless jobType is INTERNSHIP");
+            }
+            job.setInternshipDurationMonths(null);
+        }
+
+        job.setJobType(parsedJobType);
+    }
+
+    private JobType parseJobType(String jobType) {
+        try {
+            return JobType.valueOf(jobType.trim().toUpperCase());
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("jobType must be one of: FULL_TIME, PART_TIME, INTERNSHIP");
+        }
+    }
+
+    private JobResponseDto toResponse(Job job) {
+        JobResponseDto response = modelMapper.map(job, JobResponseDto.class);
+        response.setJobType(job.getJobType() == null ? null : job.getJobType().name());
+        response.setInternshipDurationMonths(job.getInternshipDurationMonths());
+        return response;
+    }
+
+    private void validateInternalRecruiterAccess(Long recruiterId, Long requesterId, String role) {
+        if (role == null || role.isBlank()) {
+            throw new UnauthorizedException("Missing role for internal recruiter endpoint");
+        }
+
+        if ("INTERNAL_SERVICE".equalsIgnoreCase(role)) {
+            return;
+        }
+
+        if (!"RECRUITER".equalsIgnoreCase(role)) {
+            throw new UnauthorizedException("Only recruiters or internal service can access this endpoint");
+        }
+
+        if (requesterId == null || !requesterId.equals(recruiterId)) {
+            throw new UnauthorizedException("Recruiters can only access their own recruiter dashboard data");
+        }
     }
 }

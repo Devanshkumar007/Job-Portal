@@ -1,0 +1,108 @@
+:host {
+  display: block;
+}
+
+mat-dialog-content {
+  min-width: min(560px, 78vw);
+  padding-top: 4px;
+}
+
+.dialog-copy {
+  margin: 0 0 16px;
+  color: var(--slate-700);
+  line-height: 1.6;
+}
+
+.status-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(31, 91, 191, 0.06);
+  color: var(--slate-700);
+
+  mat-icon {
+    color: var(--blue);
+  }
+
+  span {
+    line-height: 1.5;
+  }
+}
+
+.dialog-form {
+  display: grid;
+  gap: 14px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.upload-block {
+  display: grid;
+  gap: 10px;
+
+  input[type='file'] {
+    display: none;
+  }
+}
+
+.upload-label {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--slate-700);
+}
+
+.upload-shell {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px dashed rgba(31, 91, 191, 0.28);
+  background: rgba(247, 250, 255, 0.95);
+  cursor: pointer;
+  transition: border-color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+
+  &:hover {
+    border-color: rgba(31, 91, 191, 0.48);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(23, 61, 124, 0.08);
+  }
+
+  mat-icon {
+    color: var(--blue);
+  }
+
+  strong,
+  span {
+    display: block;
+  }
+
+  span {
+    margin-top: 3px;
+    font-size: 0.84rem;
+    color: var(--slate-500);
+  }
+}
+
+.file-error {
+  margin: 0;
+  color: #c62828;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 640px) {
+  mat-dialog-content {
+    min-width: auto;
+  }
+
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+}

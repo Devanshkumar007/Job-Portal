@@ -29,6 +29,14 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     @Override
+    @CircuitBreaker(name = "authService", fallbackMethod = "getUsersByRoleFallback")
+    public PagedResponse<UserResponse> getUsersByRole(
+            String authorization, String requesterRole, String targetRole, int page, int size) {
+        AdminRoleValidator.requireAdmin(requesterRole);
+        return userClient.getUsersByRole(authorization, targetRole, page, size);
+    }
+
+    @Override
     @CircuitBreaker(name = "authService", fallbackMethod = "getUserByIdFallback")
     public UserResponse getUserById(String authorization, String role, Long id) {
         AdminRoleValidator.requireAdmin(role);
@@ -62,6 +70,17 @@ public class AdminUserServiceImpl implements AdminUserService {
             throw unauthorizedException;
         }
         log.error("Fallback triggered. service=User service, operation=getAllUsers, cause={}", ex.getMessage(), ex);
+        throw new DownstreamServiceUnavailableException(
+                "User service unreachable. Please try again after some time.", ex);
+    }
+
+    private PagedResponse<UserResponse> getUsersByRoleFallback(
+            String authorization, String requesterRole, String targetRole, int page, int size, Throwable ex) {
+        if (ex instanceof UnauthorizedException unauthorizedException) {
+            throw unauthorizedException;
+        }
+        log.error("Fallback triggered. service=User service, operation=getUsersByRole, cause={}",
+                ex.getMessage(), ex);
         throw new DownstreamServiceUnavailableException(
                 "User service unreachable. Please try again after some time.", ex);
     }

@@ -1,69 +1,163 @@
 <div class="page-header">
-  <h1>Job Applications</h1>
-  <p>Review and manage applicants for your job posting</p>
+  <div>
+    <span class="eyebrow">Recruiter Workspace</span>
+    <h1>Job Applications</h1>
+    <p>Review applicants only for the jobs you posted, update statuses, and download resumes from one place.</p>
+  </div>
+  <div class="header-pill">
+    <span>Total Received</span>
+    <strong>{{ totalApplications }}</strong>
+  </div>
+</div>
+
+<div class="recruiter-overview-grid" *ngIf="!isLoadingJobs && recruiterJobs.length > 0 && selectedJob">
+  <mat-card class="overview-card section-card" *ngFor="let card of overviewCards">
+    <mat-card-content>
+      <strong>{{ card.value }}</strong>
+      <span [ngClass]="card.tone">{{ card.label }}</span>
+    </mat-card-content>
+  </mat-card>
 </div>
 
 <mat-card class="table-card section-card">
-  <mat-card-header>
-    <mat-card-title>Applicants</mat-card-title>
-    <mat-card-subtitle>{{ applications.length }} applications received</mat-card-subtitle>
-  </mat-card-header>
-
   <mat-card-content>
-    <div *ngIf="isLoading" class="loading">
+    <div class="card-topbar">
+      <div>
+        <span class="section-label">Review Queue</span>
+        <h2>Applicants</h2>
+        <p *ngIf="selectedJob">{{ totalApplications }} applications received for {{ selectedJob.title }}</p>
+        <p *ngIf="!selectedJob">Choose one of your jobs to view its applications.</p>
+      </div>
+    </div>
+
+    <div class="job-picker" *ngIf="recruiterJobs.length > 0">
+      <button
+        type="button"
+        class="job-chip"
+        *ngFor="let job of recruiterJobs"
+        [class.active]="job.id === jobId"
+        (click)="selectJob(job.id)">
+        <strong>{{ job.title }}</strong>
+        <span>{{ job.companyName }}</span>
+      </button>
+    </div>
+
+    <div *ngIf="isLoadingJobs" class="loading">
+      <mat-icon class="spin">refresh</mat-icon>
+      <p>Loading your jobs...</p>
+    </div>
+
+    <div *ngIf="!isLoadingJobs && recruiterJobs.length === 0" class="empty">
+      <mat-icon>work_outline</mat-icon>
+      <p>No posted jobs found yet. Post a job first to manage applications here.</p>
+    </div>
+
+    <div *ngIf="!isLoadingJobs && isLoading" class="loading">
       <mat-icon class="spin">refresh</mat-icon>
       <p>Loading applicants...</p>
     </div>
 
-    <div *ngIf="!isLoading && applications.length === 0" class="empty">
+    <div *ngIf="!isLoadingJobs && !isLoading && recruiterJobs.length > 0 && applications.length === 0" class="empty">
       <mat-icon>people_outline</mat-icon>
       <p>No applications received yet for this job.</p>
     </div>
 
-    <table mat-table [dataSource]="applications" *ngIf="!isLoading && applications.length > 0" class="full-table">
-      <ng-container matColumnDef="applicant">
-        <th mat-header-cell *matHeaderCellDef>Applicant</th>
-        <td mat-cell *matCellDef="let a">{{ a.applicantEmail }}</td>
-      </ng-container>
+    <div class="table-wrap" *ngIf="!isLoadingJobs && !isLoading && applications.length > 0">
+      <table mat-table [dataSource]="applications" class="full-table">
+        <ng-container matColumnDef="applicant">
+          <th mat-header-cell *matHeaderCellDef>Applicant</th>
+          <td mat-cell *matCellDef="let a">
+            <div class="applicant-cell">
+              <div class="avatar">{{ (a.applicantName || a.applicantEmail).charAt(0) | uppercase }}</div>
+              <div class="cell-copy">
+                <button type="button" class="profile-link-button" (click)="openApplicantProfile(a.applicantEmail, $event)">
+                  {{ a.applicantName || a.applicantEmail }}
+                </button>
+                <span>{{ a.applicantEmail }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="jobTitle">
-        <th mat-header-cell *matHeaderCellDef>Job</th>
-        <td mat-cell *matCellDef="let a">{{ a.jobTitle }}</td>
-      </ng-container>
+        <ng-container matColumnDef="jobTitle">
+          <th mat-header-cell *matHeaderCellDef>Job</th>
+          <td mat-cell *matCellDef="let a">
+            <div class="cell-copy">
+              <strong>{{ a.jobTitle }}</strong>
+              <span>{{ a.company }}</span>
+            </div>
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="company">
-        <th mat-header-cell *matHeaderCellDef>Company</th>
-        <td mat-cell *matCellDef="let a">{{ a.company }}</td>
-      </ng-container>
+        <ng-container matColumnDef="company">
+          <th mat-header-cell *matHeaderCellDef>Company</th>
+          <td mat-cell *matCellDef="let a">
+            <span class="subtle-text">{{ a.company }}</span>
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let a">
-          <mat-form-field appearance="outline" class="status-select">
-            <mat-select [value]="a.status" (selectionChange)="updateStatus(a, $event.value)">
-              <mat-option *ngFor="let s of statusOptions" [value]="s">{{ s }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </td>
-      </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let a">
+            <div class="status-badge" [ngClass]="getStatusClass(a.status)">
+              <mat-icon>{{ getStatusIcon(a.status) }}</mat-icon>
+              <span>{{ formatStatus(a.status) }}</span>
+            </div>
+          </td>
+        </ng-container>
 
-      <ng-container matColumnDef="appliedAt">
-        <th mat-header-cell *matHeaderCellDef>Applied On</th>
-        <td mat-cell *matCellDef="let a">{{ a.appliedAt | date:'mediumDate' }}</td>
-      </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Next Actions</th>
+          <td mat-cell *matCellDef="let a">
+            <div class="action-stack" *ngIf="getAvailableActions(a).length > 0; else terminalState">
+              <button
+                *ngFor="let nextStatus of getAvailableActions(a)"
+                mat-stroked-button
+                type="button"
+                class="action-btn"
+                [ngClass]="getActionButtonClass(nextStatus)"
+                [disabled]="updatingApplicationId === a.id"
+                (click)="updateStatus(a, nextStatus)">
+                <mat-icon>{{ getActionIcon(nextStatus) }}</mat-icon>
+                {{ updatingApplicationId === a.id ? 'Updating...' : getActionLabel(nextStatus) }}
+              </button>
+            </div>
 
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Resume</th>
-        <td mat-cell *matCellDef="let a">
-          <a *ngIf="a.resumeUrl" [href]="a.resumeUrl" target="_blank" mat-icon-button color="primary">
-            <mat-icon>download</mat-icon>
-          </a>
-          <span *ngIf="!a.resumeUrl" style="color:#999;font-size:0.8rem">No resume</span>
-        </td>
-      </ng-container>
+            <ng-template #terminalState>
+              <span class="terminal-copy">Final state reached</span>
+            </ng-template>
+          </td>
+        </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
+        <ng-container matColumnDef="appliedAt">
+          <th mat-header-cell *matHeaderCellDef>Applied On</th>
+          <td mat-cell *matCellDef="let a">
+            <span class="subtle-text">{{ a.appliedAt | date:'mediumDate' }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="resume">
+          <th mat-header-cell *matHeaderCellDef>Resume</th>
+          <td mat-cell *matCellDef="let a">
+            <a *ngIf="a.resumeUrl" [href]="a.resumeUrl" target="_blank" mat-icon-button color="primary">
+              <mat-icon>download</mat-icon>
+            </a>
+            <span *ngIf="!a.resumeUrl" class="no-resume">No resume</span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <mat-paginator
+        *ngIf="totalApplications > pageSize"
+        [length]="totalApplications"
+        [pageIndex]="currentPage"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20]"
+        (page)="onPageChange($event)">
+      </mat-paginator>
+    </div>
   </mat-card-content>
 </mat-card>

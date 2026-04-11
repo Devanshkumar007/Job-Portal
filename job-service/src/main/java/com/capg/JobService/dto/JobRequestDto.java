@@ -1,11 +1,9 @@
 package com.capg.JobService.dto;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 
 @Data
 public class JobRequestDto {
@@ -23,5 +21,9 @@ public class JobRequestDto {
     private String description;
     @NotBlank
     private String recruiterEmail;
+    @NotBlank
+    private String jobType;
+    @Positive
+    private Integer internshipDurationMonths;
 }
 

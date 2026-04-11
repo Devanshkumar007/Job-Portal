@@ -8,14 +8,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService, User } from '../../../core/services/auth';
+import { getHttpErrorMessage } from '../../../core/utils/http-error';
+import { UserService } from '../../../core/services/user';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatCardModule, MatFormFieldModule,
-    MatInputModule, MatButtonModule, MatIconModule, MatChipsModule, MatSnackBarModule],
+    MatInputModule, MatButtonModule, MatIconModule, MatChipsModule, MatSnackBarModule, RouterLink],
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
 })
@@ -25,11 +27,13 @@ export class Profile implements OnInit {
   isLoading = true;
   isSaving = false;
   isEditing = false;
+  viewedEmail: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     public authService: AuthService,
-    private http: HttpClient,
+    private userService: UserService,
+    private route: ActivatedRoute,
     private snackBar: MatSnackBar
   ) {
     this.profileForm = this.fb.group({
@@ -39,19 +43,23 @@ export class Profile implements OnInit {
   }
 
   ngOnInit() {
-    this.user = this.authService.getCurrentUser();
-    this.loadProfile();
+    this.route.queryParamMap.subscribe((params) => {
+      this.viewedEmail = params.get('email');
+      this.user = this.authService.getCurrentUser();
+      this.isEditing = false;
+      this.loadProfile();
+    });
   }
 
   onSubmit() {
-    if (this.profileForm.invalid || !this.user) return;
+    if (this.profileForm.invalid || !this.user || !this.canEditProfile) return;
     this.isSaving = true;
-    this.http.put(`http://localhost:8080/api/user/me`, {
+    this.userService.updateMyProfile({
       name: this.profileForm.value.name,
       phone: this.profileForm.value.phone,
       email: this.user.email
     }).subscribe({
-      next: (updated: any) => {
+      next: (updated) => {
         const newUser = { ...this.user!, ...updated };
         localStorage.setItem('user', JSON.stringify(newUser));
         this.user = newUser;
@@ -60,15 +68,25 @@ export class Profile implements OnInit {
         this.profileForm.patchValue({ name: newUser.name, phone: newUser.phone });
         this.snackBar.open('Profile updated!', 'Close', { duration: 3000 });
       },
-      error: () => {
+      error: (error) => {
         this.isSaving = false;
-        this.snackBar.open('Update failed.', 'Close', { duration: 3000 });
+        this.snackBar.open(
+          getHttpErrorMessage(error, {
+            defaultMessage: 'Unable to update your profile right now.',
+            statusMessages: {
+              400: 'Please check your profile details and try again.',
+              404: 'Your profile could not be found.'
+            }
+          }),
+          'Close',
+          { duration: 3000 }
+        );
       }
     });
   }
 
   startEditing() {
-    if (!this.user) return;
+    if (!this.user || !this.canEditProfile) return;
     this.isEditing = true;
     this.profileForm.patchValue({ name: this.user.name, phone: this.user.phone });
   }
@@ -81,18 +99,43 @@ export class Profile implements OnInit {
 
   logout() { this.authService.logout(); }
 
+  get isViewingOwnProfile(): boolean {
+    return !this.viewedEmail;
+  }
+
+  get canEditProfile(): boolean {
+    return this.isViewingOwnProfile;
+  }
+
   private loadProfile() {
     this.isLoading = true;
-    this.http.get<User>('http://localhost:8080/api/user/me').subscribe({
+    const request$ = this.viewedEmail
+      ? this.userService.getUserByEmail(this.viewedEmail)
+      : this.userService.getMyProfile();
+
+    request$.subscribe({
       next: (user) => {
         this.user = user;
-        localStorage.setItem('user', JSON.stringify(user));
+        if (this.isViewingOwnProfile) {
+          localStorage.setItem('user', JSON.stringify(user));
+        }
         this.profileForm.patchValue({ name: user.name, phone: user.phone });
         this.isLoading = false;
       },
-      error: () => {
+      error: (error) => {
         this.isLoading = false;
-        this.snackBar.open('Failed to load profile.', 'Close', { duration: 3000 });
+        this.snackBar.open(
+          getHttpErrorMessage(error, {
+            defaultMessage: this.isViewingOwnProfile
+              ? 'Unable to load your profile right now.'
+              : 'Unable to load this user profile right now.',
+            statusMessages: {
+              404: 'Your profile could not be found.'
+            }
+          }),
+          'Close',
+          { duration: 3000 }
+        );
       }
     });
   }

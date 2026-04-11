@@ -55,6 +55,33 @@ class AdminUserServiceImplTest {
     }
 
     @Test
+    @DisplayName("getUsersByRole should return paged users when requester role is ADMIN")
+    void getUsersByRole_ShouldReturnPagedUsers_WhenRequesterRoleIsAdmin() {
+        String authHeader = "Bearer token";
+        String targetRole = "RECRUITER";
+        PagedResponse<UserResponse> expected = new PagedResponse<>();
+
+        when(userClient.getUsersByRole(authHeader, targetRole, 0, 10)).thenReturn(expected);
+
+        PagedResponse<UserResponse> actual =
+                adminUserService.getUsersByRole(authHeader, "ADMIN", targetRole, 0, 10);
+
+        assertEquals(expected, actual);
+        verify(userClient).getUsersByRole(authHeader, targetRole, 0, 10);
+    }
+
+    @Test
+    @DisplayName("getUsersByRole should reject non-admin requester role and skip downstream call")
+    void getUsersByRole_ShouldThrowUnauthorized_WhenRequesterRoleIsNotAdmin() {
+        String authHeader = "Bearer token";
+        String targetRole = "RECRUITER";
+
+        assertThrows(UnauthorizedException.class,
+                () -> adminUserService.getUsersByRole(authHeader, "USER", targetRole, 0, 10));
+        verify(userClient, never()).getUsersByRole(authHeader, targetRole, 0, 10);
+    }
+
+    @Test
     @DisplayName("getUserByEmail should pass-through email lookup for case-insensitive admin role")
     void getUserByEmail_ShouldReturnUser_WhenRoleIsLowercaseAdmin() {
         String authHeader = "Bearer token";

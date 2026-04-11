@@ -27,7 +27,22 @@ public class Job {
     @Column(length = 2000)
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    private JobType jobType;
+
+    private Integer internshipDurationMonths;
+
+    @Enumerated(EnumType.STRING)
+    private JobStatus status;
+
 //    @Column(name = "recruiter_id")
     private Long recruiterId;
     private LocalDateTime createdAt;
+
+    @PrePersist
+    public void applyDefaults() {
+        if (status == null) {
+            status = JobStatus.ACTIVE;
+        }
+    }
 }

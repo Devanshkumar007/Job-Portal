@@ -28,6 +28,7 @@ class JobSpecificationTest {
         filter.setMaxSalary(20.0);
         filter.setMinExperience(1);
         filter.setMaxExperience(8);
+        filter.setJobType("FULL_TIME");
 
         Specification<Job> specification = JobSpecification.getFilteredJobs(filter);
 

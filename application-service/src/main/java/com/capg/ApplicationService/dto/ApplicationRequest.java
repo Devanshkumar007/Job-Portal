@@ -8,6 +8,7 @@ public class ApplicationRequest {
     private Long jobId;
     private String resumeUrl;
     private String applicantEmail;
+    private String applicantName;
     private String jobTitle;
     private String company;
     private String resumePublicId;

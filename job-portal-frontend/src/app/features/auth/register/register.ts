@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth';
+import { getHttpErrorMessage } from '../../../core/utils/http-error';
 
 @Component({
   selector: 'app-register',
@@ -61,7 +62,17 @@ export class Register {
       },
       error: (err: any) => {
         this.isLoading = false;
-        this.snackBar.open(err.error?.message || 'Registration failed. Please try again.', 'Close', { duration: 3000 });
+        this.snackBar.open(
+          getHttpErrorMessage(err, {
+            defaultMessage: 'Unable to complete registration right now.',
+            statusMessages: {
+              400: 'Please check the form details and try again.',
+              409: 'Email already registered.'
+            }
+          }),
+          'Close',
+          { duration: 3000 }
+        );
       }
     });
   }

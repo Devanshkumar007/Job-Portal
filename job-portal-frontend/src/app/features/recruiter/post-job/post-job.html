@@ -1,11 +1,34 @@
 <div class="post-job-container">
-  <mat-card class="post-job-card">
-    <mat-card-header>
-      <mat-card-title>Post a New Job</mat-card-title>
-      <mat-card-subtitle>Fill in the details to create a job listing</mat-card-subtitle>
-    </mat-card-header>
-
+  <mat-card class="hero-card section-card">
     <mat-card-content>
+      <div class="hero-content">
+        <div>
+          <span class="hero-label">Recruiter Workspace</span>
+          <h1>{{ isEditMode ? 'Edit Job Listing' : 'Post a New Job' }}</h1>
+          <p>
+            {{ isEditMode
+              ? 'Update the details below to keep this job listing accurate for candidates.'
+              : 'Fill in the details below to publish a job listing and start collecting applications from candidates.' }}
+          </p>
+        </div>
+        <div class="hero-note">
+          <span>{{ isEditMode ? 'Editing Tip' : 'Publishing Tip' }}</span>
+          <strong>Clear titles and strong descriptions usually attract better applications.</strong>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="post-job-card section-card">
+    <mat-card-content>
+      <div class="card-topbar">
+        <div>
+          <span class="section-label">Listing Form</span>
+          <h2>Job Details</h2>
+          <p>{{ isEditMode ? 'Review each field carefully before saving your changes.' : 'Complete the form carefully before publishing.' }}</p>
+        </div>
+      </div>
+
       <form [formGroup]="postJobForm" (ngSubmit)="onSubmit()">
 
         <div class="form-row">
@@ -33,21 +56,46 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Salary (in LPA)</mat-label>
-            <input matInput formControlName="salary" type="number" placeholder="e.g. 1200000">
-            <mat-icon matPrefix>payments</mat-icon>
-            <mat-hint>Enter amount in rupees e.g. 1200000 for 12 LPA</mat-hint>
-            <mat-error *ngIf="postJobForm.get('salary')?.hasError('required')">Salary is required</mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline" class="full-width">
             <mat-label>Experience Required (years)</mat-label>
             <input matInput formControlName="experience" type="number" placeholder="e.g. 3">
             <mat-icon matPrefix>work_history</mat-icon>
             <mat-error *ngIf="postJobForm.get('experience')?.hasError('required')">Experience is required</mat-error>
           </mat-form-field>
+        </div>
+
+        <div class="salary-type-row" [class.has-duration]="isInternship">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ isInternship ? 'Monthly Stipend (in INR)' : 'Salary (in LPA)' }}</mat-label>
+            <input matInput formControlName="salary" type="number" [placeholder]="isInternship ? 'e.g. 15000' : 'e.g. 1200000'">
+            <mat-icon matPrefix>payments</mat-icon>
+            <mat-hint>
+              {{ isInternship ? 'Enter monthly stipend in rupees, e.g. 15000 for Rs 15,000/month' : 'Enter annual amount in rupees, e.g. 1200000 for 12 LPA' }}
+            </mat-hint>
+            <mat-error *ngIf="postJobForm.get('salary')?.hasError('required')">Salary is required</mat-error>
+          </mat-form-field>
+
+          <div class="type-field">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Job Type</mat-label>
+              <mat-select formControlName="jobType">
+                <mat-option *ngFor="let option of jobTypeOptions" [value]="option.value">
+                  {{ option.label }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>work_outline</mat-icon>
+              <mat-error *ngIf="postJobForm.get('jobType')?.hasError('required')">Job type is required</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="duration-field" [class.is-visible]="isInternship" [attr.aria-hidden]="!isInternship">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Internship Duration (months)</mat-label>
+              <input matInput formControlName="internshipDurationMonths" type="number" placeholder="e.g. 6">
+              <mat-icon matPrefix>schedule</mat-icon>
+              <mat-error *ngIf="postJobForm.get('internshipDurationMonths')?.hasError('required')">Duration is required for internships</mat-error>
+              <mat-error *ngIf="postJobForm.get('internshipDurationMonths')?.hasError('min')">Duration must be at least 1 month</mat-error>
+            </mat-form-field>
+          </div>
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
@@ -61,10 +109,10 @@
 
         <div class="form-actions">
           <button mat-stroked-button type="button" (click)="postJobForm.reset()">
-            Clear Form
+            {{ isEditMode ? 'Reset Form' : 'Clear Form' }}
           </button>
-          <button mat-raised-button color="primary" type="submit" [disabled]="isLoading">
-            {{ isLoading ? 'Posting...' : 'Publish Job' }}
+          <button mat-flat-button color="primary" type="submit" [disabled]="isLoading">
+            {{ isLoading ? (isEditMode ? 'Saving...' : 'Posting...') : (isEditMode ? 'Save Changes' : 'Publish Job') }}
           </button>
         </div>
 

@@ -7,11 +7,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 import { JobService } from '../../../core/services/job';
 import { AuthService, Job, JobSearchFilters } from '../../../core/services/auth';
+import { getHttpErrorMessage } from '../../../core/utils/http-error';
 
 @Component({
   selector: 'app-job-list',
@@ -25,6 +27,7 @@ import { AuthService, Job, JobSearchFilters } from '../../../core/services/auth'
     MatInputModule,
     MatFormFieldModule,
     MatChipsModule,
+    MatSelectModule,
     MatPaginatorModule,
     MatSnackBarModule
   ],
@@ -40,6 +43,11 @@ export class JobList implements OnInit {
   isLoading = true;
   searchKeyword = '';
   hasActiveFilters = false;
+  readonly jobTypeOptions = [
+    { value: 'FULL_TIME', label: 'Full Time' },
+    { value: 'PART_TIME', label: 'Part Time' },
+    { value: 'INTERNSHIP', label: 'Internship' }
+  ] as const;
 
   constructor(
     private readonly jobService: JobService,
@@ -55,6 +63,7 @@ export class JobList implements OnInit {
         title: params.get('title')?.trim() || undefined,
         location: params.get('location')?.trim() || undefined,
         companyName: params.get('companyName')?.trim() || undefined,
+        jobType: (params.get('jobType')?.trim() as JobSearchFilters['jobType']) || undefined,
         minSalary: this.toNumber(params.get('minSalary')),
         maxSalary: this.toNumber(params.get('maxSalary')),
         minExperience: this.toNumber(params.get('minExperience')),
@@ -131,19 +140,53 @@ export class JobList implements OnInit {
     const confirmed = confirm('Are you sure you want to delete this job? This action cannot be undone.');
     if (!confirmed) return;
 
-    this.jobService.deleteJob(jobId).subscribe({
+    const deleteRequest$ = this.authService.isAdmin()
+      ? this.jobService.deleteJobAsAdmin(jobId)
+      : this.jobService.deleteJob(jobId);
+
+    deleteRequest$.subscribe({
       next: () => {
         this.snackBar.open('Job deleted successfully!', 'Close', { duration: 3000 });
         this.loadJobs();
       },
       error: (err: any) => {
-        this.snackBar.open(err.error?.message || 'Failed to delete job.', 'Close', { duration: 3000 });
+        this.snackBar.open(
+          getHttpErrorMessage(err, {
+            defaultMessage: 'Unable to delete this job right now.',
+            statusMessages: {
+              403: 'You do not have permission to delete this job.',
+              404: 'This job no longer exists.'
+            }
+          }),
+          'Close',
+          { duration: 3000 }
+        );
       }
     });
   }
 
-  formatSalary(salary: number): string {
-    return `₹${(salary / 100000).toFixed(1)} LPA`;
+  formatSalary(job: Job): string {
+    if (job.jobType === 'INTERNSHIP') {
+      return `₹${Math.round(job.salary).toLocaleString('en-IN')}/month`;
+    }
+    return `₹${(job.salary / 100000).toFixed(1)} LPA`;
+  }
+
+  formatJobType(job: Job): string {
+    if (!job.jobType) return '';
+    if (job.jobType === 'FULL_TIME') return 'Full Time';
+    if (job.jobType === 'PART_TIME') return 'Part Time';
+    if (job.internshipDurationMonths) return `Internship • ${job.internshipDurationMonths} mo`;
+    return 'Internship';
+  }
+
+  formatJobTypeLabel(jobType?: JobSearchFilters['jobType']): string {
+    if (!jobType) return '';
+    return this.jobTypeOptions.find((option) => option.value === jobType)?.label ?? jobType;
+  }
+
+  getViewButtonLabel(): string {
+    return this.authService.isRecruiter() ? 'View' : 'View & Apply';
   }
 
   private updateQueryParams() {

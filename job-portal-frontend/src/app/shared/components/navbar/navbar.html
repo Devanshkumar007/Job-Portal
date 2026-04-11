@@ -1,47 +1,52 @@
 <mat-toolbar class="navbar page-shell">
-  <a class="brand" routerLink="/jobs">
-    <span class="brand-mark">NC</span>
-    <span class="brand-copy">
-      <strong>Nexus Careers</strong>
-      <small>Find roles that fit</small>
-    </span>
-  </a>
-
-  <div class="nav-links" *ngIf="authService.isLoggedIn()">
-    <button mat-button routerLink="/jobs">Jobs</button>
-    <ng-container *ngIf="authService.isJobSeeker()">
-      <button mat-button routerLink="/my-applications">Applications</button>
-    </ng-container>
-    <ng-container *ngIf="authService.isRecruiter()">
-      <button mat-button routerLink="/recruiter/dashboard">Dashboard</button>
-      <button mat-button routerLink="/recruiter/post-job">Post Job</button>
-    </ng-container>
-    <ng-container *ngIf="authService.isAdmin()">
-      <button mat-button routerLink="/admin/users">Users</button>
-      <button mat-button routerLink="/admin/jobs">Jobs</button>
-      <button mat-button routerLink="/admin/applications">Applications</button>
-    </ng-container>
+  <div class="nav-zone nav-zone-left">
+    <a class="brand" routerLink="/jobs">
+      <span class="brand-mark">NC</span>
+      <span class="brand-copy">
+        <strong>Nexus Careers</strong>
+        <small>Find roles that fit</small>
+      </span>
+    </a>
   </div>
 
-  <span class="spacer"></span>
-
-  <div class="auth-actions" *ngIf="!authService.isLoggedIn()">
-    <button mat-button routerLink="/login">Login</button>
-    <button mat-raised-button routerLink="/register">Register</button>
+  <div class="nav-zone nav-zone-center">
+    <div class="nav-links" *ngIf="authService.isLoggedIn()">
+      <button mat-button routerLink="/jobs">Jobs</button>
+      <ng-container *ngIf="authService.isJobSeeker()">
+        <button mat-button routerLink="/my-applications">Applications</button>
+      </ng-container>
+      <ng-container *ngIf="authService.isRecruiter()">
+        <button mat-button routerLink="/recruiter/dashboard">Dashboard</button>
+        <button mat-button routerLink="/recruiter/post-job">Post Job</button>
+        <button mat-button routerLink="/recruiter/applications">Applications</button>
+      </ng-container>
+      <ng-container *ngIf="authService.isAdmin()">
+        <button mat-button routerLink="/admin/users">Users</button>
+        <button mat-button routerLink="/admin/jobs">Manage Jobs</button>
+        <button mat-button routerLink="/admin/applications">Applications</button>
+      </ng-container>
+    </div>
   </div>
 
-  <div class="profile-actions" *ngIf="authService.isLoggedIn()">
-    <button mat-stroked-button routerLink="/profile" class="profile-link">Profile</button>
-    <button mat-icon-button [matMenuTriggerFor]="userMenu" class="avatar-button">
-      <mat-icon>account_circle</mat-icon>
-    </button>
-    <mat-menu #userMenu="matMenu">
-      <button mat-menu-item routerLink="/profile">
-        <mat-icon>person</mat-icon> Profile
+  <div class="nav-zone nav-zone-right">
+    <div class="auth-actions" *ngIf="!authService.isLoggedIn()">
+      <button mat-button routerLink="/login">Login</button>
+      <button mat-raised-button routerLink="/register">Register</button>
+    </div>
+
+    <div class="profile-actions" *ngIf="authService.isLoggedIn()">
+      <button mat-stroked-button routerLink="/profile" class="profile-link">Profile</button>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" class="avatar-button">
+        <mat-icon>account_circle</mat-icon>
       </button>
-      <button mat-menu-item (click)="logout()">
-        <mat-icon>logout</mat-icon> Logout
-      </button>
-    </mat-menu>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item routerLink="/profile">
+          <mat-icon>person</mat-icon> Profile
+        </button>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon> Logout
+        </button>
+      </mat-menu>
+    </div>
   </div>
 </mat-toolbar>

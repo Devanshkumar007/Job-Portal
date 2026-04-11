@@ -22,6 +22,6 @@ class EventPublisherTest {
 
         publisher.publishUserDeletedEvent(event);
 
-        verify(rabbitTemplate).convertAndSend("job-portal-exchange", "user.deleted", event);
+        verify(rabbitTemplate).convertAndSend("job-portal-exchange", "job.user.deleted", event);
     }
 }

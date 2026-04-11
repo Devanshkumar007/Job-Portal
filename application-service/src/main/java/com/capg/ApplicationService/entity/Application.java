@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 
 @Table(name = "applications", uniqueConstraints = {
@@ -39,9 +41,29 @@ public class Application {
 
     private String applicantEmail;
 
+    private String applicantName;
+
     private String jobTitle;
 
     @Column(name = "resume_public_id")
     private String resumePublicId;
+
+    @Column(name = "offer_letter_url")
+    private String offerLetterUrl;
+
+    @Column(name = "offer_letter_public_id")
+    private String offerLetterPublicId;
+
+    @Column(name = "interview_link")
+    private String interviewLink;
+
+    @Column(name = "interview_date")
+    private LocalDate interviewDate;
+
+    @Column(name = "interview_time")
+    private LocalTime interviewTime;
+
+    @Column(name = "interview_time_zone")
+    private String interviewTimeZone;
 
 }

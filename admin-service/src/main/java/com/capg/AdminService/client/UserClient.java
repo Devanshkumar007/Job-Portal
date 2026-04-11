@@ -23,6 +23,13 @@ public interface UserClient {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size);
 
+    @GetMapping("/api/user/role/{role}")
+    PagedResponse<UserResponse> getUsersByRole(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable("role") String role,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size);
+
     @GetMapping("/api/user/{id}")
     UserResponse getUserById(
             @RequestHeader("Authorization") String authorization,

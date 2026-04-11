@@ -2,6 +2,7 @@ package com.capg.AdminService.service;
 
 import com.capg.AdminService.client.ApplicationsClient;
 import com.capg.AdminService.dto.ApplicationResponse;
+import com.capg.AdminService.dto.PagedResponse;
 import com.capg.AdminService.exception.DownstreamServiceUnavailableException;
 import com.capg.AdminService.exception.UnauthorizedException;
 import com.capg.AdminService.util.AdminRoleValidator;
@@ -9,8 +10,6 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -21,9 +20,11 @@ public class AdminApplicationServiceImpl implements AdminApplicationService {
 
     @Override
     @CircuitBreaker(name = "applicationService", fallbackMethod = "getAllApplicationsFallback")
-    public List<ApplicationResponse> getAllApplications(Long requesterId, String role) {
+    public PagedResponse<ApplicationResponse> getAllApplications(
+            Long requesterId, String role, int page, int size, String sortBy, String direction) {
         AdminRoleValidator.requireAdmin(role);
-        return applicationsClient.getAllApplications(requesterId, role);
+        String sort = sortBy + "," + direction;
+        return applicationsClient.getAllApplications(page, size, sort, requesterId, role);
     }
 
     @Override
@@ -40,7 +41,8 @@ public class AdminApplicationServiceImpl implements AdminApplicationService {
         applicationsClient.deleteApplication(applicationId, requesterId, role);
     }
 
-    private List<ApplicationResponse> getAllApplicationsFallback(Long requesterId, String role, Throwable ex) {
+    private PagedResponse<ApplicationResponse> getAllApplicationsFallback(
+            Long requesterId, String role, int page, int size, String sortBy, String direction, Throwable ex) {
         if (ex instanceof UnauthorizedException unauthorizedException) {
             throw unauthorizedException;
         }

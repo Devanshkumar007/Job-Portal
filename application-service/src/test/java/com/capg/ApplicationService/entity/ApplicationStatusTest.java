@@ -18,6 +18,12 @@ class ApplicationStatusTest {
     }
 
     @Test
+    void valueOf_accepts_interview_scheduled_status() {
+        ApplicationStatus status = ApplicationStatus.valueOf("INTERVIEW_SCHEDULED");
+        assertEquals(ApplicationStatus.INTERVIEW_SCHEDULED, status);
+    }
+
+    @Test
     void valueOf_rejects_invalid_status_edge_case() {
         assertThrows(IllegalArgumentException.class,
                 () -> ApplicationStatus.valueOf("applied"));

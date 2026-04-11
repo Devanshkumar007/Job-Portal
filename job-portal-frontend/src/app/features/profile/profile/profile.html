@@ -1,94 +1,175 @@
 <div class="profile-layout">
   <div class="profile-sidebar">
     <mat-card class="avatar-card section-card">
+      <div class="profile-badge">{{ isViewingOwnProfile ? 'My Account' : 'Candidate Profile' }}</div>
       <div class="avatar-circle">{{ user?.name?.charAt(0) }}</div>
       <h2>{{ user?.name }}</h2>
-      <p>{{ user?.email }}</p>
-      <mat-chip [color]="user?.role === 'ADMIN' ? 'warn' : user?.role === 'RECRUITER' ? 'accent' : 'primary'" selected>
-        {{ user?.role }}
-      </mat-chip>
-      <div class="meta-block">
-        <span class="meta-label">Phone</span>
-        <strong>{{ user?.phone || 'Not added yet' }}</strong>
+      <p class="sidebar-email">{{ user?.email }}</p>
+
+      <div class="sidebar-stats">
+        <div class="stat-pill">
+          <span>Phone</span>
+          <strong>{{ user?.phone || 'Not added yet' }}</strong>
+        </div>
+        <div class="stat-pill">
+          <span>Joined</span>
+          <strong>{{ user?.createdAt ? (user?.createdAt | date:'mediumDate') : 'Unavailable' }}</strong>
+        </div>
       </div>
-      <div class="meta-block">
-        <span class="meta-label">Joined</span>
-        <strong>{{ user?.createdAt ? (user?.createdAt | date:'mediumDate') : 'Unavailable' }}</strong>
+
+      <div class="sidebar-actions">
+        <button mat-flat-button color="primary" (click)="startEditing()" class="edit-btn" *ngIf="!isEditing && canEditProfile">
+          <mat-icon>edit</mat-icon>
+          Edit Profile
+        </button>
+        <button mat-stroked-button color="primary" routerLink="/profile/change-password" class="edit-btn secondary-btn" *ngIf="isViewingOwnProfile">
+          <mat-icon>lock_reset</mat-icon>
+          Change Password
+        </button>
+        <button mat-stroked-button type="button" (click)="cancelEditing()" class="edit-btn secondary-btn" *ngIf="isEditing && canEditProfile">
+          <mat-icon>close</mat-icon>
+          Cancel Edit
+        </button>
+        <button mat-stroked-button color="primary" routerLink="/recruiter/applications" class="edit-btn secondary-btn" *ngIf="!isViewingOwnProfile && authService.isRecruiter()">
+          <mat-icon>arrow_back</mat-icon>
+          Back to Applications
+        </button>
+        <button mat-stroked-button color="warn" (click)="logout()" class="logout-btn" *ngIf="isViewingOwnProfile">
+          <mat-icon>logout</mat-icon>
+          Logout
+        </button>
       </div>
-      <button mat-raised-button color="primary" (click)="startEditing()" class="edit-btn" *ngIf="!isEditing">
-        <mat-icon>edit</mat-icon> Edit Profile
-      </button>
-      <button mat-stroked-button color="warn" (click)="logout()" class="logout-btn">
-        <mat-icon>logout</mat-icon> Logout
-      </button>
+    </mat-card>
+
+    <mat-card class="section-card sidebar-note">
+      <mat-card-content>
+        <span class="note-label">Profile Snapshot</span>
+        <h3>Keep your information current</h3>
+        <p>Recruiters and hiring teams use these details while reviewing your applications and account activity.</p>
+      </mat-card-content>
     </mat-card>
   </div>
 
   <div class="profile-main">
+    <mat-card class="section-card hero-card" *ngIf="!isLoading">
+      <mat-card-content>
+        <div class="hero-copy">
+          <span class="hero-label">Profile Center</span>
+          <h1>{{ isEditing ? 'Update your profile' : (isViewingOwnProfile ? 'Profile details' : 'Candidate details') }}</h1>
+          <p>{{ isEditing ? 'Make changes to your personal information before saving them to your account.' : (isViewingOwnProfile ? 'View your current account details, phone number, and account history in one place.' : 'Review the candidate contact details and account information shared with hiring teams.') }}</p>
+        </div>
+        <div class="hero-panels">
+          <div class="hero-panel">
+            <span>Account Created</span>
+            <strong>{{ user?.createdAt ? (user?.createdAt | date:'mediumDate') : 'Unavailable' }}</strong>
+          </div>
+          <div class="hero-panel">
+            <span>Primary Contact</span>
+            <strong>{{ user?.phone || 'Not added yet' }}</strong>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
     <mat-card class="section-card edit-card" *ngIf="isLoading">
       <mat-card-content class="loading-state">
         <mat-icon class="spin">refresh</mat-icon>
-        <p>Loading profile...</p>
+        <p>{{ isViewingOwnProfile ? 'Loading profile...' : 'Loading candidate profile...' }}</p>
       </mat-card-content>
     </mat-card>
 
     <mat-card class="section-card edit-card" *ngIf="!isLoading && !isEditing">
-      <mat-card-header>
-        <mat-card-title>Profile Details</mat-card-title>
-        <mat-card-subtitle>Your account information</mat-card-subtitle>
-      </mat-card-header>
+      <mat-card-content>
+        <div class="card-heading">
+          <div>
+            <span>{{ isViewingOwnProfile ? 'Account Overview' : 'Candidate Overview' }}</span>
+            <h2>{{ isViewingOwnProfile ? 'Profile Details' : 'Profile Details' }}</h2>
+          </div>
+          <button mat-stroked-button type="button" class="inline-edit-btn" (click)="startEditing()" *ngIf="canEditProfile">
+            <mat-icon>edit</mat-icon>
+            Edit
+          </button>
+        </div>
 
-      <mat-card-content class="profile-details">
-        <div class="detail-row">
-          <span>Full Name</span>
-          <strong>{{ user?.name }}</strong>
+        <div class="profile-details">
+          <div class="detail-row">
+            <span>Full Name</span>
+            <strong>{{ user?.name }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Email</span>
+            <strong>{{ user?.email }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Phone Number</span>
+            <strong>{{ user?.phone || 'Not added yet' }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Account Created</span>
+            <strong>{{ user?.createdAt ? (user?.createdAt | date:'mediumDate') : 'Unavailable' }}</strong>
+          </div>
         </div>
-        <div class="detail-row">
-          <span>Email</span>
-          <strong>{{ user?.email }}</strong>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="section-card edit-card security-card" *ngIf="!isLoading && isViewingOwnProfile">
+      <mat-card-content>
+        <div class="card-heading">
+          <div>
+            <span>Security</span>
+            <h2>Change Password</h2>
+          </div>
         </div>
-        <div class="detail-row">
-          <span>Phone Number</span>
-          <strong>{{ user?.phone || 'Not added yet' }}</strong>
-        </div>
-        <div class="detail-row">
-          <span>Account Created</span>
-          <strong>{{ user?.createdAt ? (user?.createdAt | date:'mediumDate') : 'Unavailable' }}</strong>
+
+        <div class="security-action">
+          <p class="security-intro">Update your password on a dedicated security page so your profile details stay clean and easy to read.</p>
+          <button mat-flat-button color="primary" routerLink="/profile/change-password" class="save-btn">
+            <mat-icon>lock_reset</mat-icon>
+            Change Password
+          </button>
         </div>
       </mat-card-content>
     </mat-card>
 
     <mat-card class="section-card edit-card" *ngIf="!isLoading && isEditing">
-      <mat-card-header>
-        <mat-card-title>Edit Profile</mat-card-title>
-        <mat-card-subtitle>Update your personal information</mat-card-subtitle>
-      </mat-card-header>
-
       <mat-card-content>
+        <div class="card-heading">
+          <div>
+            <span>Edit Mode</span>
+            <h2>Edit Profile</h2>
+          </div>
+          <button mat-stroked-button type="button" class="inline-edit-btn" (click)="cancelEditing()">
+            <mat-icon>close</mat-icon>
+            Cancel
+          </button>
+        </div>
+
         <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Full Name</mat-label>
-            <input matInput formControlName="name">
-            <mat-icon matPrefix>person</mat-icon>
-            <mat-error *ngIf="profileForm.get('name')?.hasError('required')">Name is required</mat-error>
-          </mat-form-field>
+          <div class="form-grid">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Full Name</mat-label>
+              <input matInput formControlName="name">
+              <mat-icon matPrefix>person</mat-icon>
+              <mat-error *ngIf="profileForm.get('name')?.hasError('required')">Name is required</mat-error>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Email</mat-label>
-            <input matInput [value]="user?.email" disabled>
-            <mat-icon matPrefix>email</mat-icon>
-            <mat-hint>Email cannot be changed</mat-hint>
-          </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Email</mat-label>
+              <input matInput [value]="user?.email" disabled>
+              <mat-icon matPrefix>email</mat-icon>
+              <mat-hint>Email cannot be changed</mat-hint>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Phone Number</mat-label>
-            <input matInput formControlName="phone" placeholder="+91 9999999999">
-            <mat-icon matPrefix>phone</mat-icon>
-          </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width phone-field">
+              <mat-label>Phone Number</mat-label>
+              <input matInput formControlName="phone" placeholder="+91 9999999999">
+              <mat-icon matPrefix>phone</mat-icon>
+            </mat-form-field>
+          </div>
 
           <div class="form-actions">
             <button mat-stroked-button type="button" (click)="cancelEditing()">Cancel</button>
-            <button mat-raised-button color="primary" type="submit" [disabled]="isSaving" class="save-btn">
+            <button mat-flat-button color="primary" type="submit" [disabled]="isSaving" class="save-btn">
               {{ isSaving ? 'Saving...' : 'Save Changes' }}
             </button>
           </div>

@@ -1,11 +1,11 @@
 package com.capg.ApplicationService.service;
 
 import com.capg.ApplicationService.dto.ApplicationResponse;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface AdminApplicationService {
-    List<ApplicationResponse> getAllApplications(Long authenticatedUserId, String role);
+    Page<ApplicationResponse> getAllApplications(Long authenticatedUserId, String role, Pageable pageable);
 
     ApplicationResponse getApplicationById(Long applicationId, Long authenticatedUserId, String role);
 

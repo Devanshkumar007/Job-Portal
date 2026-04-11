@@ -107,9 +107,9 @@ public class UserController {
         return ResponseEntity.ok(toUserResponse(user));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'RECRUITER')")
     @GetMapping("/email/{email}")
-    @Operation(summary = "Get user by email (admin)")
+    @Operation(summary = "Get user by email (admin/recruiter)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User returned successfully"),
             @ApiResponse(responseCode = "403", description = "Forbidden"),
@@ -136,6 +136,25 @@ public class UserController {
         Page<UserResponse> response = userService.getAllUsers(page, size)
                 .map(this::toUserResponse);
         log.info("Admin fetched users page successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/role/{role}")
+    @Operation(summary = "Get users by role with pagination (admin)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Users returned successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid role"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    public ResponseEntity<Page<UserResponse>> getUsersByRole(
+            @PathVariable String role,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        log.info("Admin get users by role request received role={} page={} size={}", role, page, size);
+        Page<UserResponse> response = userService.getUsersByRole(role, page, size)
+                .map(this::toUserResponse);
+        log.info("Admin fetched users by role successfully");
         return ResponseEntity.ok(response);
     }
 
