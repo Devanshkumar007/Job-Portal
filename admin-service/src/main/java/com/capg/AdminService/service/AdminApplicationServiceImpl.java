@@ -43,8 +43,8 @@ public class AdminApplicationServiceImpl implements AdminApplicationService {
 
     private PagedResponse<ApplicationResponse> getAllApplicationsFallback(
             Long requesterId, String role, int page, int size, String sortBy, String direction, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=Application service, operation=getAllApplications, cause={}",
                 ex.getMessage(), ex);
@@ -54,8 +54,8 @@ public class AdminApplicationServiceImpl implements AdminApplicationService {
 
     private ApplicationResponse getApplicationByIdFallback(
             Long applicationId, Long requesterId, String role, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=Application service, operation=getApplicationById, cause={}",
                 ex.getMessage(), ex);
@@ -64,8 +64,8 @@ public class AdminApplicationServiceImpl implements AdminApplicationService {
     }
 
     private void deleteApplicationFallback(Long applicationId, Long requesterId, String role, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=Application service, operation=deleteApplication, cause={}",
                 ex.getMessage(), ex);

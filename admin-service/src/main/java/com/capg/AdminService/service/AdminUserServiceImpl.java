@@ -66,8 +66,8 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private PagedResponse<UserResponse> getAllUsersFallback(
             String authorization, String role, int page, int size, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=User service, operation=getAllUsers, cause={}", ex.getMessage(), ex);
         throw new DownstreamServiceUnavailableException(
@@ -76,8 +76,8 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private PagedResponse<UserResponse> getUsersByRoleFallback(
             String authorization, String requesterRole, String targetRole, int page, int size, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=User service, operation=getUsersByRole, cause={}",
                 ex.getMessage(), ex);
@@ -86,8 +86,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     private UserResponse getUserByIdFallback(String authorization, String role, Long id, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=User service, operation=getUserById, cause={}", ex.getMessage(), ex);
         throw new DownstreamServiceUnavailableException(
@@ -95,8 +95,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     private UserResponse getUserByEmailFallback(String authorization, String role, String email, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=User service, operation=getUserByEmail, cause={}",
                 ex.getMessage(), ex);
@@ -106,8 +106,8 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private UserResponse updateUserFallback(
             String authorization, String role, Long id, AdminUserUpdateRequest request, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=User service, operation=updateUser, cause={}", ex.getMessage(), ex);
         throw new DownstreamServiceUnavailableException(
@@ -115,8 +115,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     }
 
     private Map<String, String> deleteUserFallback(String authorization, String role, Long id, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=User service, operation=deleteUserById, cause={}",
                 ex.getMessage(), ex);

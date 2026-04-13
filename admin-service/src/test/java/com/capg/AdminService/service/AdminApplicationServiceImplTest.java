@@ -3,6 +3,7 @@ package com.capg.AdminService.service;
 import com.capg.AdminService.client.ApplicationsClient;
 import com.capg.AdminService.dto.ApplicationResponse;
 import com.capg.AdminService.dto.PagedResponse;
+import com.capg.AdminService.exception.DownstreamServiceUnavailableException;
 import com.capg.AdminService.exception.UnauthorizedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,7 +11,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -102,5 +109,115 @@ class AdminApplicationServiceImplTest {
         assertThrows(UnauthorizedException.class,
                 () -> adminApplicationService.deleteApplication(applicationId, requesterId, role));
         verify(applicationsClient, never()).deleteApplication(applicationId, requesterId, role);
+    }
+
+    @Test
+    @DisplayName("getAllApplications fallback should rethrow UnauthorizedException")
+    void getAllApplicationsFallback_ShouldRethrowUnauthorizedException() {
+        UnauthorizedException unauthorized = new UnauthorizedException("forbidden");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "getAllApplicationsFallback",
+                new Class<?>[]{Long.class, String.class, int.class, int.class, String.class, String.class, Throwable.class},
+                10L, "ADMIN", 0, 10, "appliedAt", "desc", unauthorized
+        );
+
+        assertSame(unauthorized, thrown);
+    }
+
+    @Test
+    @DisplayName("getApplicationById fallback should wrap downstream errors")
+    void getApplicationByIdFallback_ShouldWrapDownstreamError() {
+        RuntimeException downstream = new RuntimeException("service down");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "getApplicationByIdFallback",
+                new Class<?>[]{Long.class, Long.class, String.class, Throwable.class},
+                99L, 10L, "ADMIN", downstream
+        );
+
+        DownstreamServiceUnavailableException wrapped =
+                assertInstanceOf(DownstreamServiceUnavailableException.class, thrown);
+        assertEquals("Application service unreachable. Please try again after some time.", wrapped.getMessage());
+        assertSame(downstream, wrapped.getCause());
+    }
+
+    @Test
+    @DisplayName("deleteApplication fallback should wrap downstream errors")
+    void deleteApplicationFallback_ShouldWrapDownstreamError() {
+        RuntimeException downstream = new RuntimeException("timeout");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "deleteApplicationFallback",
+                new Class<?>[]{Long.class, Long.class, String.class, Throwable.class},
+                45L, 10L, "ADMIN", downstream
+        );
+
+        DownstreamServiceUnavailableException wrapped =
+                assertInstanceOf(DownstreamServiceUnavailableException.class, thrown);
+        assertEquals("Application service unreachable. Please try again after some time.", wrapped.getMessage());
+        assertSame(downstream, wrapped.getCause());
+    }
+
+    @Test
+    @DisplayName("getAllApplications fallback should wrap downstream errors")
+    void getAllApplicationsFallback_ShouldWrapDownstreamError() {
+        RuntimeException downstream = new RuntimeException("service down");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "getAllApplicationsFallback",
+                new Class<?>[]{Long.class, String.class, int.class, int.class, String.class, String.class, Throwable.class},
+                10L, "ADMIN", 0, 10, "appliedAt", "desc", downstream
+        );
+
+        DownstreamServiceUnavailableException wrapped =
+                assertInstanceOf(DownstreamServiceUnavailableException.class, thrown);
+        assertEquals("Application service unreachable. Please try again after some time.", wrapped.getMessage());
+        assertSame(downstream, wrapped.getCause());
+    }
+
+    @Test
+    @DisplayName("getApplicationById fallback should rethrow UnauthorizedException")
+    void getApplicationByIdFallback_ShouldRethrowUnauthorizedException() {
+        UnauthorizedException unauthorized = new UnauthorizedException("forbidden");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "getApplicationByIdFallback",
+                new Class<?>[]{Long.class, Long.class, String.class, Throwable.class},
+                99L, 10L, "ADMIN", unauthorized
+        );
+
+        assertSame(unauthorized, thrown);
+    }
+
+    @Test
+    @DisplayName("deleteApplication fallback should rethrow UnauthorizedException")
+    void deleteApplicationFallback_ShouldRethrowUnauthorizedException() {
+        UnauthorizedException unauthorized = new UnauthorizedException("forbidden");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "deleteApplicationFallback",
+                new Class<?>[]{Long.class, Long.class, String.class, Throwable.class},
+                45L, 10L, "ADMIN", unauthorized
+        );
+
+        assertSame(unauthorized, thrown);
+    }
+
+    private RuntimeException invokeFallbackAndCapture(String methodName, Class<?>[] parameterTypes, Object... args) {
+        try {
+            Method method = AdminApplicationServiceImpl.class.getDeclaredMethod(methodName, parameterTypes);
+            method.setAccessible(true);
+            method.invoke(adminApplicationService, args);
+            throw new AssertionError("Expected runtime exception from fallback method");
+        } catch (InvocationTargetException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException runtimeException) {
+                return runtimeException;
+            }
+            throw new RuntimeException(cause);
+        } catch (ReflectiveOperationException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

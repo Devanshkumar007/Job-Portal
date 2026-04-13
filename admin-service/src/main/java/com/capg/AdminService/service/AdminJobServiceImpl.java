@@ -45,8 +45,8 @@ public class AdminJobServiceImpl implements AdminJobService {
 
     private PagedResponse<JobResponseDto> getAllJobsFallback(
             String role, int page, int size, String sortBy, String direction, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=Job service, operation=getAllJobs, cause={}",
                 ex.getMessage(), ex);
@@ -55,8 +55,8 @@ public class AdminJobServiceImpl implements AdminJobService {
     }
 
     private JobResponseDto getJobByIdFallback(String role, Long jobId, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
         log.error("Fallback triggered. service=Job service, operation=getJobById, cause={}",
                 ex.getMessage(), ex);
@@ -65,11 +65,11 @@ public class AdminJobServiceImpl implements AdminJobService {
     }
 
     private void deleteJobFallback(String role, Long jobId, Throwable ex) {
-        if (ex instanceof UnauthorizedException unauthorizedException) {
-            throw unauthorizedException;
+        if (ex instanceof UnauthorizedException) {
+            throw (UnauthorizedException) ex;
         }
-        if (ex instanceof IllegalStateException illegalStateException) {
-            throw illegalStateException;
+        if (ex instanceof IllegalStateException) {
+            throw (IllegalStateException) ex;
         }
         log.error("Fallback triggered. service=Job service, operation=deleteJob, cause={}",
                 ex.getMessage(), ex);

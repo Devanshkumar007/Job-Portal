@@ -3,6 +3,7 @@ package com.capg.AdminService.service;
 import com.capg.AdminService.client.JobsClient;
 import com.capg.AdminService.dto.JobResponseDto;
 import com.capg.AdminService.dto.PagedResponse;
+import com.capg.AdminService.exception.DownstreamServiceUnavailableException;
 import com.capg.AdminService.exception.UnauthorizedException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -117,5 +123,129 @@ class AdminJobServiceImplTest {
         assertThrows(UnauthorizedException.class, () -> adminJobService.deleteJob("RECRUITER", jobId));
         verify(jobsClient, never()).getJobById(jobId);
         verify(jobsClient, never()).deleteJob(jobId, null);
+    }
+
+    @Test
+    @DisplayName("getAllJobs fallback should rethrow UnauthorizedException")
+    void getAllJobsFallback_ShouldRethrowUnauthorizedException() {
+        UnauthorizedException unauthorized = new UnauthorizedException("forbidden");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "getAllJobsFallback",
+                new Class<?>[]{String.class, int.class, int.class, String.class, String.class, Throwable.class},
+                "ADMIN", 0, 10, "createdAt", "desc", unauthorized
+        );
+
+        assertSame(unauthorized, thrown);
+    }
+
+    @Test
+    @DisplayName("getJobById fallback should wrap downstream errors")
+    void getJobByIdFallback_ShouldWrapDownstreamError() {
+        RuntimeException downstream = new RuntimeException("service down");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "getJobByIdFallback",
+                new Class<?>[]{String.class, Long.class, Throwable.class},
+                "ADMIN", 33L, downstream
+        );
+
+        DownstreamServiceUnavailableException wrapped =
+                assertInstanceOf(DownstreamServiceUnavailableException.class, thrown);
+        assertEquals("Job service unreachable. Please try again after some time.", wrapped.getMessage());
+        assertSame(downstream, wrapped.getCause());
+    }
+
+    @Test
+    @DisplayName("deleteJob fallback should rethrow IllegalStateException")
+    void deleteJobFallback_ShouldRethrowIllegalStateException() {
+        IllegalStateException invalidState = new IllegalStateException("Recruiter id is missing for job: 33");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "deleteJobFallback",
+                new Class<?>[]{String.class, Long.class, Throwable.class},
+                "ADMIN", 33L, invalidState
+        );
+
+        assertSame(invalidState, thrown);
+    }
+
+    @Test
+    @DisplayName("deleteJob fallback should wrap unexpected downstream errors")
+    void deleteJobFallback_ShouldWrapDownstreamError() {
+        RuntimeException downstream = new RuntimeException("timeout");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "deleteJobFallback",
+                new Class<?>[]{String.class, Long.class, Throwable.class},
+                "ADMIN", 33L, downstream
+        );
+
+        DownstreamServiceUnavailableException wrapped =
+                assertInstanceOf(DownstreamServiceUnavailableException.class, thrown);
+        assertEquals("Job service unreachable. Please try again after some time.", wrapped.getMessage());
+        assertSame(downstream, wrapped.getCause());
+    }
+
+    @Test
+    @DisplayName("getAllJobs fallback should wrap downstream errors")
+    void getAllJobsFallback_ShouldWrapDownstreamError() {
+        RuntimeException downstream = new RuntimeException("service down");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "getAllJobsFallback",
+                new Class<?>[]{String.class, int.class, int.class, String.class, String.class, Throwable.class},
+                "ADMIN", 0, 10, "createdAt", "desc", downstream
+        );
+
+        DownstreamServiceUnavailableException wrapped =
+                assertInstanceOf(DownstreamServiceUnavailableException.class, thrown);
+        assertEquals("Job service unreachable. Please try again after some time.", wrapped.getMessage());
+        assertSame(downstream, wrapped.getCause());
+    }
+
+    @Test
+    @DisplayName("getJobById fallback should rethrow UnauthorizedException")
+    void getJobByIdFallback_ShouldRethrowUnauthorizedException() {
+        UnauthorizedException unauthorized = new UnauthorizedException("forbidden");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "getJobByIdFallback",
+                new Class<?>[]{String.class, Long.class, Throwable.class},
+                "ADMIN", 33L, unauthorized
+        );
+
+        assertSame(unauthorized, thrown);
+    }
+
+    @Test
+    @DisplayName("deleteJob fallback should rethrow UnauthorizedException")
+    void deleteJobFallback_ShouldRethrowUnauthorizedException() {
+        UnauthorizedException unauthorized = new UnauthorizedException("forbidden");
+
+        RuntimeException thrown = invokeFallbackAndCapture(
+                "deleteJobFallback",
+                new Class<?>[]{String.class, Long.class, Throwable.class},
+                "ADMIN", 33L, unauthorized
+        );
+
+        assertSame(unauthorized, thrown);
+    }
+
+    private RuntimeException invokeFallbackAndCapture(String methodName, Class<?>[] parameterTypes, Object... args) {
+        try {
+            Method method = AdminJobServiceImpl.class.getDeclaredMethod(methodName, parameterTypes);
+            method.setAccessible(true);
+            method.invoke(adminJobService, args);
+            throw new AssertionError("Expected runtime exception from fallback method");
+        } catch (InvocationTargetException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RuntimeException runtimeException) {
+                return runtimeException;
+            }
+            throw new RuntimeException(cause);
+        } catch (ReflectiveOperationException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

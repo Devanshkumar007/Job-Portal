@@ -105,8 +105,6 @@
 			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
 
-
-
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -145,6 +143,31 @@
 						</exclude>
 					</excludes>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.11</version>
+
+				<executions>
+
+					<!-- Attach JaCoCo agent -->
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+
+					<!-- Generate coverage report -->
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

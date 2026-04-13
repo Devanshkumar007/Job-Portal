@@ -45,10 +45,10 @@ public class GlobalExceptionHandler {
         return build(ex.getMessage(), HttpStatus.SERVICE_UNAVAILABLE);
     }
 
-//    @ExceptionHandler(Exception.class)
-//    public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
-//        return build("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
-//    }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+        return build("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
     private ResponseEntity<ErrorResponse> build(String message, HttpStatus status) {
         ErrorResponse response = new ErrorResponse(

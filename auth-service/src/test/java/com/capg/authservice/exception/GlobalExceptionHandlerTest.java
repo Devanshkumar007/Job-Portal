@@ -11,6 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +57,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleValidationForFieldErrorsShouldReturn400WithFieldMap() {
+        // Field-level validation errors should be exposed with field keys.
         when(methodArgumentNotValidException.getBindingResult()).thenReturn(bindingResult);
         when(bindingResult.getFieldErrors()).thenReturn(List.of(
                 new FieldError("registerRequest", "email", "Invalid email format"),
@@ -67,6 +69,17 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("Invalid email format", response.getBody().get("email"));
         assertEquals("Password must be at least 6 characters", response.getBody().get("password"));
+    }
+
+    @Test
+    void handleValidationForNoFieldErrorsShouldReturnBadRequestWithEmptyBody() {
+        when(methodArgumentNotValidException.getBindingResult()).thenReturn(bindingResult);
+        when(bindingResult.getFieldErrors()).thenReturn(Collections.emptyList());
+
+        ResponseEntity<Map<String, String>> response = handler.handleValidation(methodArgumentNotValidException);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(0, response.getBody().size());
     }
 
     @Test
